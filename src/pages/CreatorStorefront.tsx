@@ -19,6 +19,7 @@ export default function CreatorStorefront() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
+  const [userEnrollments, setUserEnrollments] = useState<Set<string>>(new Set());
 
   const invokeEdgeFunction = async (functionName: string, body: any) => {
     try {
@@ -85,6 +86,21 @@ export default function CreatorStorefront() {
     if (creatorResult.data) setCreator(creatorResult.data);
     if (coursesResult.data) setCourses(coursesResult.data);
     if (productsResult.data) setProducts(productsResult.data);
+
+    // Fetch user enrollments if logged in
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && coursesResult.data) {
+      const courseIds = coursesResult.data.map(c => c.id);
+      const { data: enrollments } = await supabase
+        .from("enrollments")
+        .select("course_id")
+        .eq("user_id", user.id)
+        .in("course_id", courseIds);
+
+      if (enrollments) {
+        setUserEnrollments(new Set(enrollments.map(e => e.course_id)));
+      }
+    }
 
     setLoading(false);
   };
@@ -336,12 +352,21 @@ export default function CreatorStorefront() {
                           ) : (
                             <span className="text-2xl font-bold text-primary">₹{course.price}</span>
                           )}
-                          <Button
-                            onClick={() => handleEnroll(course)}
-                            disabled={enrolling === course.id}
-                          >
-                            {enrolling === course.id ? "Enrolling..." : "Enroll Now"}
-                          </Button>
+                          {userEnrollments.has(course.id) ? (
+                            <Button
+                              onClick={() => navigate(`/course/${course.id}`)}
+                              variant="secondary"
+                            >
+                              View Course
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={() => handleEnroll(course)}
+                              disabled={enrolling === course.id}
+                            >
+                              {enrolling === course.id ? "Enrolling..." : "Enroll Now"}
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>

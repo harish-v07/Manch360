@@ -35,7 +35,15 @@ export default function LearnerDashboard() {
 
     const { data } = await supabase
       .from("orders")
-      .select("*")
+      .select(`
+        *,
+        products (
+          name,
+          description,
+          media_urls,
+          type
+        )
+      `)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
@@ -109,18 +117,55 @@ export default function LearnerDashboard() {
               {orders.map((order) => (
                 <Card key={order.id} className="shadow-soft">
                   <CardContent className="p-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-primary">₹{order.amount}</p>
-                        <span className="px-3 py-1 rounded-full text-xs bg-secondary text-secondary-foreground">
-                          {order.status}
-                        </span>
+                    <div className="flex gap-4">
+                      {/* Product Image */}
+                      {order.products?.media_urls && order.products.media_urls.length > 0 && (
+                        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                          {order.products.media_urls[0].includes('.mp4') || order.products.media_urls[0].includes('.webm') ? (
+                            <video src={order.products.media_urls[0]} className="w-full h-full object-cover" />
+                          ) : (
+                            <img src={order.products.media_urls[0]} alt={order.products.name} className="w-full h-full object-cover" />
+                          )}
+                        </div>
+                      )}
+
+                      {/* Order Details */}
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-semibold text-lg">{order.products?.name || 'Product'}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Order #{order.id.slice(0, 8)}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-primary">₹{Number(order.amount).toFixed(2)}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 mt-3">
+                          {order.products?.type && (
+                            <span className="px-3 py-1 rounded-full text-xs bg-secondary text-secondary-foreground">
+                              {order.products.type}
+                            </span>
+                          )}
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
+                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
+                                order.status === 'processing' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' :
+                                  'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                            }`}>
+                            {order.status}
+                          </span>
+                          <p className="text-xs text-muted-foreground ml-auto">
+                            {new Date(order.created_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </CardContent>

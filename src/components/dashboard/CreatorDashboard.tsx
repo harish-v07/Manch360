@@ -100,6 +100,14 @@ export default function CreatorDashboard() {
 
       const courseIds = creatorCourses?.map(c => c.id) || [];
 
+      // Fetch creator's product IDs for sales calculations
+      const { data: creatorProducts } = await supabase
+        .from("products")
+        .select("id")
+        .eq("creator_id", user.id);
+
+      const productIds = creatorProducts?.map(p => p.id) || [];
+
       // Fetch unique learners (enrolled users)
       let learnersCount = 0;
       if (courseIds.length > 0) {
@@ -112,14 +120,30 @@ export default function CreatorDashboard() {
         learnersCount = uniqueLearners.size;
       }
 
-      // Fetch total sales from completed orders
-      const { data: orders } = await supabase
-        .from("orders")
-        .select("amount")
-        .eq("status", "completed")
-        .in("item_id", courseIds);
+      // Fetch total sales from completed orders (both courses and products)
+      let totalSales = 0;
 
-      const totalSales = orders?.reduce((sum, order) => sum + Number(order.amount), 0) || 0;
+      // Get course sales
+      if (courseIds.length > 0) {
+        const { data: courseOrders } = await supabase
+          .from("orders")
+          .select("amount")
+          .eq("status", "completed")
+          .in("item_id", courseIds);
+
+        totalSales += courseOrders?.reduce((sum, order) => sum + Number(order.amount), 0) || 0;
+      }
+
+      // Get product sales
+      if (productIds.length > 0) {
+        const { data: productOrders } = await supabase
+          .from("orders")
+          .select("amount")
+          .eq("status", "completed")
+          .in("product_id", productIds);
+
+        totalSales += productOrders?.reduce((sum, order) => sum + Number(order.amount), 0) || 0;
+      }
 
       setStats({
         totalCourses: coursesCount || 0,

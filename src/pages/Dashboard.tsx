@@ -5,8 +5,11 @@ import { Session } from "@supabase/supabase-js";
 import { Navbar } from "@/components/Navbar";
 import CreatorDashboard from "@/components/dashboard/CreatorDashboard";
 import LearnerDashboard from "@/components/dashboard/LearnerDashboard";
+import { useSessionMonitor } from "@/hooks/useSessionMonitor";
 
 export default function Dashboard() {
+  // Monitor session validity
+  useSessionMonitor();
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);

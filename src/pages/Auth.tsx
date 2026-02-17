@@ -105,12 +105,28 @@ export default function Auth() {
           return;
         }
 
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data: authData, error } = await supabase.auth.signInWithPassword({
           email: validation.data.email,
           password: validation.data.password,
         });
 
         if (error) throw error;
+
+        // Store session information in the database
+        if (authData.session) {
+          const { error: updateError } = await supabase
+            .from("profiles")
+            .update({
+              active_session_id: authData.session.access_token.substring(0, 50),
+              session_created_at: new Date().toISOString(),
+              last_activity_at: new Date().toISOString(),
+            })
+            .eq("id", authData.user.id);
+
+          if (updateError) {
+            console.error("Failed to update session info:", updateError);
+          }
+        }
 
         toast.success("Welcome back!");
         navigate("/dashboard");

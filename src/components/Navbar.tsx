@@ -66,7 +66,7 @@ export const Navbar = () => {
                   <Button variant="outline">Sign In</Button>
                 </Link>
                 <Link to="/auth?mode=signup">
-                  <Button variant="default">Join as Creator</Button>
+                  <Button variant="default">Join</Button>
                 </Link>
               </>
             )}

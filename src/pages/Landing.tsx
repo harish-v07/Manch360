@@ -39,7 +39,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth?mode=signup">
                 <Button size="lg" variant="default">
-                  Join as Creator
+                  Join
                 </Button>
               </Link>
               <Link to="/explore">

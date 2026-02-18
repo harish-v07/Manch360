@@ -25,6 +25,17 @@ export default function Auth() {
   });
 
   useEffect(() => {
+    // Sync state with URL params
+    const mode = searchParams.get("mode");
+    if (mode === "signup") {
+      setIsSignup(true);
+      setIsForgotPassword(false);
+    } else {
+      setIsSignup(false);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {

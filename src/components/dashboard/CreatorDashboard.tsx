@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Package, Store, DollarSign, Share2, Copy, Check } from "lucide-react";
+import { BookOpen, Package, Store, IndianRupee, Share2, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CoursesManager from "./CoursesManager";
@@ -221,10 +221,10 @@ export default function CreatorDashboard() {
         <Card className="shadow-soft">
           <CardHeader className="pb-3">
             <CardDescription>Total Sales</CardDescription>
-            <CardTitle className="text-3xl">${stats.totalSales.toFixed(2)}</CardTitle>
+            <CardTitle className="text-3xl">₹{stats.totalSales.toFixed(2)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <DollarSign className="text-secondary w-8 h-8" />
+            <IndianRupee className="text-secondary w-8 h-8" />
             <p className="text-xs text-muted-foreground mt-2">From completed orders</p>
           </CardContent>
         </Card>

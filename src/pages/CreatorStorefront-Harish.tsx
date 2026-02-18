@@ -156,7 +156,9 @@ export default function CreatorStorefront() {
           currency: 'INR',
           description: `Enrollment for ${course.title}`,
           receipt: `rcpt_${Date.now()}_${course.id.substring(0, 8)}`, // Keep under 40 chars
-          course_id: course.id, // For Route transfer
+          creator_id: creatorId, // For Razorpay Route transfer
+          item_id: course.id,
+          item_type: 'course',
         };
 
         console.log('Creating Razorpay order with payload:', orderPayload);

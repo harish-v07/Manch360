@@ -38,7 +38,7 @@ export default function ProductDetail() {
     const fetchProduct = async () => {
         const { data, error } = await supabase
             .from("products")
-            .select("*, profiles(name, avatar_url)")
+            .select("*, creator_id, profiles(name, avatar_url)")
             .eq("id", productId)
             .single();
 
@@ -143,7 +143,9 @@ export default function ProductDetail() {
                 currency: 'INR',
                 description: `Purchase of ${product.name}`,
                 receipt: `rcpt_${Date.now()}_${product.id.substring(0, 8)}`,
-                product_id: product.id, // Required for Route transfer to creator
+                creator_id: product.creator_id, // For Razorpay Route transfer
+                item_id: product.id,
+                item_type: 'product',
             };
 
             const { data: orderData, error: orderError } = await invokeEdgeFunction('create-razorpay-order', orderPayload);

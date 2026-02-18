@@ -104,6 +104,9 @@ export const Cart = () => {
         currency: 'INR',
         description: `Purchase of ${items.length} item(s)`,
         receipt: `rcpt_${Date.now()}_cart`,
+        // Pass first item's product_id so Route transfer goes to that creator
+        // For multi-creator carts, the transfer goes to the first item's creator
+        product_id: items[0]?.id,
       };
 
       const { data: orderData, error: orderError } = await invokeEdgeFunction('create-razorpay-order', orderPayload);

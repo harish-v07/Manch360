@@ -79,7 +79,7 @@ export default function CreatorStorefront() {
 
   const fetchCreatorData = async () => {
     const [creatorResult, coursesResult, productsResult] = await Promise.all([
-      supabase.from("public_profiles").select("*").eq("id", creatorId).single(),
+      supabase.from("public_profiles_with_roles" as any).select("id, name, bio, avatar_url, banner_url, social_links, status, suspended_until").eq("id", creatorId).single(),
       supabase.from("courses").select("*").eq("creator_id", creatorId).eq("status", "published"),
       supabase.from("products").select("*").eq("creator_id", creatorId),
     ]);
@@ -248,6 +248,39 @@ export default function CreatorStorefront() {
         <Navbar />
         <div className="container mx-auto px-4 pt-32">
           <p className="text-center text-muted-foreground">Creator not found</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Block access to suspended/banned creator storefronts
+  const isSuspended =
+    creator.status === "suspended" &&
+    creator.suspended_until &&
+    new Date(creator.suspended_until) > new Date();
+  const isBanned = creator.status === "banned";
+
+  if (isSuspended || isBanned) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="container mx-auto px-4 pt-32 flex flex-col items-center justify-center">
+          <div className="text-center max-w-md">
+            <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold mb-3">Storefront Unavailable</h2>
+            <p className="text-muted-foreground mb-6">
+              This creator's storefront is currently unavailable. Please check back later.
+            </p>
+            <a href="/explore">
+              <button className="px-6 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                Browse Other Creators
+              </button>
+            </a>
+          </div>
         </div>
       </div>
     );

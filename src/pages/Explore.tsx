@@ -22,7 +22,8 @@ export default function Explore() {
     const { data, error } = await supabase
       .from("public_profiles_with_roles" as any)
       .select("*")
-      .eq("role", "creator");
+      .eq("role", "creator")
+      .eq("status", "active");
 
     if (error) {
       console.error("Error fetching creators:", error);

@@ -123,6 +123,33 @@ export default function Auth() {
 
         if (error) throw error;
 
+        // ── Check if user is suspended or banned ──────────────────────────
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("status, suspended_until")
+          .eq("id", authData.user.id)
+          .single();
+
+        if (profile?.status === "banned") {
+          await supabase.auth.signOut();
+          toast.error("Your account has been banned. Contact support for help.", { duration: 8000 });
+          setLoading(false);
+          return;
+        }
+
+        if (profile?.status === "suspended") {
+          const until = profile.suspended_until ? new Date(profile.suspended_until) : null;
+          if (until && until > new Date()) {
+            await supabase.auth.signOut();
+            toast.error(
+              `Your account is suspended until ${until.toLocaleDateString()}. Contact support.`,
+              { duration: 8000 }
+            );
+            setLoading(false);
+            return;
+          }
+        }
+
         // Write a unique session token so only this device stays as the active session.
         // When a second login happens, this token is overwritten, and the first device
         // gets kicked out by useSessionMonitor within 30 seconds.

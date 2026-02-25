@@ -123,21 +123,18 @@ export default function Auth() {
 
         if (error) throw error;
 
-        // Store session information in the database
-        if (authData.session) {
-          const { error: updateError } = await supabase
-            .from("profiles")
-            .update({
-              active_session_id: authData.session.access_token.substring(0, 50),
-              session_created_at: new Date().toISOString(),
-              last_activity_at: new Date().toISOString(),
-            })
-            .eq("id", authData.user.id);
-
-          if (updateError) {
-            console.error("Failed to update session info:", updateError);
-          }
-        }
+        // Write a unique session token so only this device stays as the active session.
+        // When a second login happens, this token is overwritten, and the first device
+        // gets kicked out by useSessionMonitor within 30 seconds.
+        const sessionToken = crypto.randomUUID();
+        localStorage.setItem("ch_session_token", sessionToken);
+        await supabase
+          .from("profiles")
+          .update({
+            active_session_id: sessionToken,
+            last_activity_at: new Date().toISOString(),
+          })
+          .eq("id", authData.user.id);
 
         toast.success("Welcome back!");
         navigate("/dashboard");

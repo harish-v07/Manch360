@@ -7,8 +7,8 @@ import CreatorDashboard from "@/components/dashboard/CreatorDashboard";
 import LearnerDashboard from "@/components/dashboard/LearnerDashboard";
 import { useSessionMonitor } from "@/hooks/useSessionMonitor";
 
+
 export default function Dashboard() {
-  // Monitor session validity
   useSessionMonitor();
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);

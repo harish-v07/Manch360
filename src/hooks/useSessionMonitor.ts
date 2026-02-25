@@ -4,8 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 /**
- * Custom hook to monitor session validity and auto-logout on session invalidation
- * Checks every 30 seconds if the current session is still the active session
+ * Enforces one active session per user.
+ * On login, Auth.tsx writes a UUID token to localStorage ("ch_session_token")
+ * and to profiles.active_session_id. This hook polls every 30 seconds and
+ * compares the local token against the DB value. If they differ (another
+ * device logged in), this session is signed out automatically.
  */
 export function useSessionMonitor() {
     const navigate = useNavigate();
@@ -14,7 +17,6 @@ export function useSessionMonitor() {
 
     useEffect(() => {
         const validateSession = async () => {
-            // Prevent concurrent checks
             if (isCheckingRef.current) return;
             isCheckingRef.current = true;
 
@@ -24,61 +26,67 @@ export function useSessionMonitor() {
                 } = await supabase.auth.getSession();
 
                 if (!session) {
-                    // No session, user is already logged out
                     isCheckingRef.current = false;
                     return;
                 }
 
-                // Call the validate-session Edge Function
-                const { data, error } = await supabase.functions.invoke(
-                    "validate-session",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${session.access_token}`,
-                        },
-                    }
-                );
+                const localToken = localStorage.getItem("ch_session_token");
 
-                if (error) {
-                    console.error("Session validation error:", error);
+                // If no local token (e.g. session predates this feature), establish one
+                if (!localToken) {
+                    const newToken = crypto.randomUUID();
+                    localStorage.setItem("ch_session_token", newToken);
+                    await supabase
+                        .from("profiles")
+                        .update({
+                            active_session_id: newToken,
+                            last_activity_at: new Date().toISOString(),
+                        })
+                        .eq("id", session.user.id);
                     isCheckingRef.current = false;
                     return;
                 }
 
-                // If session is invalid, logout the user
-                if (!data.valid) {
-                    // Clear the interval
+                // Fetch the active session token from DB
+                const { data: profile, error: profileError } = await supabase
+                    .from("profiles")
+                    .select("active_session_id")
+                    .eq("id", session.user.id)
+                    .single();
+
+                if (profileError) {
+                    console.error("Session monitor: failed to fetch profile:", profileError.message);
+                    isCheckingRef.current = false;
+                    return;
+                }
+
+                // Token mismatch → another device just logged in, kick this one out
+                if (profile?.active_session_id && profile.active_session_id !== localToken) {
                     if (checkIntervalRef.current) {
                         clearInterval(checkIntervalRef.current);
                         checkIntervalRef.current = null;
                     }
 
-                    // Sign out the user
+                    localStorage.removeItem("ch_session_token");
                     await supabase.auth.signOut();
 
-                    // Show notification
                     toast.error(
-                        data.message || "You have been logged out because you logged in from another device.",
-                        { duration: 5000 }
+                        "You have been logged out because you signed in from another device.",
+                        { duration: 6000 }
                     );
 
-                    // Redirect to auth page
                     navigate("/auth");
                 }
-            } catch (error) {
-                console.error("Error validating session:", error);
+            } catch (err) {
+                console.error("Session monitor error:", err);
             } finally {
                 isCheckingRef.current = false;
             }
         };
 
-        // Start the interval to check session validity every 30 seconds
+        validateSession();
         checkIntervalRef.current = setInterval(validateSession, 30000);
 
-        // Run initial check
-        validateSession();
-
-        // Cleanup on unmount
         return () => {
             if (checkIntervalRef.current) {
                 clearInterval(checkIntervalRef.current);

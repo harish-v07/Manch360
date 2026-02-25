@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Supabase CLI cache (auto-generated)
+supabase/.temp

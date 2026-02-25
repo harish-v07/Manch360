@@ -36,5 +36,6 @@ This project is built with:
 - React
 - Tailwind CSS
 - Supabase
+- AWS
 
 

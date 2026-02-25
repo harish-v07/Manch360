@@ -300,10 +300,26 @@ export default function CourseViewer() {
                 <div className="relative overflow-hidden">
                   {renderContent()}
                   {showWatermark && creatorName && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
-                      <p className="text-6xl md:text-8xl font-bold text-gray-400/40 rotate-[-30deg] whitespace-nowrap">
+                    <div className="absolute bottom-3 right-3 pointer-events-none select-none z-10">
+                      <span
+                        style={{
+                          fontFamily: "'Inter', 'SF Pro Display', system-ui, sans-serif",
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          letterSpacing: "0.04em",
+                          color: "rgba(255,255,255,0.55)",
+                          background: "rgba(0,0,0,0.32)",
+                          backdropFilter: "blur(4px)",
+                          padding: "3px 9px",
+                          borderRadius: "4px",
+                          whiteSpace: "nowrap",
+                          textTransform: "uppercase",
+                          lineHeight: 1.4,
+                          border: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      >
                         {creatorName}
-                      </p>
+                      </span>
                     </div>
                   )}
                 </div>

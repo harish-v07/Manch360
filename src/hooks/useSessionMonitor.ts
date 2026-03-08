@@ -29,21 +29,6 @@ export function useSessionMonitor() {
 
                 const localToken = localStorage.getItem("ch_session_token");
 
-                // If no local token, establish one this device
-                if (!localToken) {
-                    const newToken = crypto.randomUUID();
-                    localStorage.setItem("ch_session_token", newToken);
-                    await supabase
-                        .from("profiles")
-                        .update({
-                            active_session_id: newToken,
-                            last_activity_at: new Date().toISOString(),
-                        })
-                        .eq("id", session.user.id);
-                    isCheckingRef.current = false;
-                    return;
-                }
-
                 // Fetch profile — session token + status
                 const { data: profile, error: profileError } = await supabase
                     .from("profiles")
@@ -53,6 +38,29 @@ export function useSessionMonitor() {
 
                 if (profileError) {
                     console.error("Session monitor: failed to fetch profile:", profileError.message);
+                    isCheckingRef.current = false;
+                    return;
+                }
+
+                // If no local token, ADOPT whatever the DB has (written by Auth.tsx at login).
+                // Do NOT generate a new token and overwrite — that would kick out the very browser
+                // that just logged in (race condition).
+                if (!localToken) {
+                    if (profile?.active_session_id) {
+                        // Adopt the token that Auth.tsx already wrote for us
+                        localStorage.setItem("ch_session_token", profile.active_session_id);
+                    } else {
+                        // No token anywhere — establish one fresh (e.g. user existed before this feature)
+                        const newToken = crypto.randomUUID();
+                        localStorage.setItem("ch_session_token", newToken);
+                        await supabase
+                            .from("profiles")
+                            .update({
+                                active_session_id: newToken,
+                                last_activity_at: new Date().toISOString(),
+                            })
+                            .eq("id", session.user.id);
+                    }
                     isCheckingRef.current = false;
                     return;
                 }
@@ -96,7 +104,8 @@ export function useSessionMonitor() {
                         checkIntervalRef.current = null;
                     }
                     localStorage.removeItem("ch_session_token");
-                    await supabase.auth.signOut();
+                    // scope:'local' — only clear THIS browser's session, not all devices
+                    await supabase.auth.signOut({ scope: "local" });
                     toast.error("Your session was ended by an administrator.", { duration: 6000 });
                     navigate("/auth");
                     return;
@@ -108,7 +117,9 @@ export function useSessionMonitor() {
                         checkIntervalRef.current = null;
                     }
                     localStorage.removeItem("ch_session_token");
-                    await supabase.auth.signOut();
+                    // scope:'local' — only clear THIS browser's session.
+                    // If we used global, it would also kill the new session on the other device!
+                    await supabase.auth.signOut({ scope: "local" });
                     toast.error(
                         "You have been logged out because you signed in from another device.",
                         { duration: 6000 }

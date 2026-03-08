@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Edit, Shield, Ban, UserCheck, ChevronDown, RefreshCw, Sparkles, CheckCircle2, XCircle, Clock, AlertTriangle, FileText, UserSquare2, IdCard } from "lucide-react";
+import { Trash2, Edit, Shield, Ban, UserCheck, ChevronDown, ChevronUp, RefreshCw, Sparkles, CheckCircle2, XCircle, Clock, AlertTriangle, FileText, UserSquare2, IdCard, Search, ZoomIn } from "lucide-react";
 import { toast } from "sonner";
 import { getS3ViewUrl } from "@/lib/s3-upload";
 
@@ -74,6 +74,9 @@ export default function AdminDashboard() {
   const [verLoading, setVerLoading] = useState(false);
   const [rejectUser, setRejectUser] = useState<VerificationRequest | null>(null);
   const [rejectNotes, setRejectNotes] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [verSearch, setVerSearch] = useState("");
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
   useEffect(() => {
     checkAdminAccess();
@@ -395,6 +398,17 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
+      {/* ── Lightbox ── */}
+      {lightboxImg && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightboxImg(null)}
+        >
+          <img src={lightboxImg} alt="Full view" className="max-h-full max-w-full rounded-lg shadow-2xl object-contain" />
+          <button className="absolute top-4 right-4 text-white/70 hover:text-white text-3xl leading-none" onClick={() => setLightboxImg(null)}>✕</button>
+        </div>
+      )}
+
       {/* ── Ban confirmation dialog ── */}
       <AlertDialog open={!!pendingBanUser} onOpenChange={(open) => { if (!open) setPendingBanUser(null); }}>
         <AlertDialogContent>
@@ -678,7 +692,7 @@ export default function AdminDashboard() {
                       <CardTitle>Seller Verification Requests</CardTitle>
                     </div>
                     <CardDescription className="mt-1">
-                      Review seller applications and use Gemini AI to get a trust score before approving.
+                      Click a row to expand full KYC details. Use Gemini AI to score before approving.
                     </CardDescription>
                   </div>
                   <Button variant="outline" size="sm" onClick={fetchVerificationRequests}>
@@ -686,183 +700,194 @@ export default function AdminDashboard() {
                     Refresh
                   </Button>
                 </div>
+
+                {/* Search bar */}
+                <div className="relative mt-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or email…"
+                    value={verSearch}
+                    onChange={(e) => setVerSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
               </CardHeader>
+
               <CardContent>
                 {verLoading ? (
                   <div className="text-center py-8">
                     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                     <p className="text-muted-foreground text-sm">Loading requests…</p>
                   </div>
-                ) : verificationRequests.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <CheckCircle2 className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                    <p className="font-medium">No verification requests yet</p>
-                    <p className="text-sm mt-1">When sellers apply for verification, they'll appear here.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {verificationRequests.map((req) => (
-                      <div key={req.id} className="border rounded-xl p-5 space-y-4 bg-card">
-                        {/* Header row */}
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-lg">{req.name}</span>
-                              {getVerStatusBadge(req.verification_status)}
-                            </div>
-                            <p className="text-sm text-muted-foreground">{req.email}</p>
-
-                            {/* KYC Details extracted from request */}
-                            {req.kyc_full_name && (
-                              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-3 bg-muted/20 p-4 rounded-lg border">
-                                  <h4 className="font-semibold flex items-center gap-2 text-sm border-b pb-2">
-                                    <UserSquare2 className="h-4 w-4 text-primary" /> Personal Details
-                                  </h4>
-                                  <p className="text-sm"><span className="text-muted-foreground">Legal Name:</span> {req.kyc_full_name}</p>
-                                  <p className="text-sm"><span className="text-muted-foreground">Mobile:</span> {req.kyc_mobile}</p>
-                                  <p className="text-sm"><span className="text-muted-foreground">Address:</span> {req.kyc_address}</p>
-                                </div>
-                                <div className="space-y-3 bg-muted/20 p-4 rounded-lg border">
-                                  <h4 className="font-semibold flex items-center gap-2 text-sm border-b pb-2">
-                                    <IdCard className="h-4 w-4 text-primary" /> Document Details
-                                  </h4>
-                                  <p className="text-sm"><span className="text-muted-foreground">Type:</span> <span className="uppercase">{req.kyc_document_type?.replace('_', ' ')}</span></p>
-                                  <p className="text-sm"><span className="text-muted-foreground">ID Number:</span> {req.kyc_id_number}</p>
+                ) : (() => {
+                  const filtered = verificationRequests.filter(r =>
+                    r.name?.toLowerCase().includes(verSearch.toLowerCase()) ||
+                    r.email?.toLowerCase().includes(verSearch.toLowerCase())
+                  );
+                  return filtered.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <CheckCircle2 className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                      <p className="font-medium">{verSearch ? "No matches found" : "No verification requests yet"}</p>
+                      <p className="text-sm mt-1">{verSearch ? "Try a different search term." : "When sellers apply for verification, they'll appear here."}</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {filtered.map((req) => {
+                        const isExpanded = expandedId === req.id;
+                        return (
+                          <div key={req.id}>
+                            {/* ── Compact row ── */}
+                            <button
+                              className="w-full flex items-center justify-between gap-3 py-3 px-1 hover:bg-muted/30 transition-colors text-left"
+                              onClick={() => setExpandedId(isExpanded ? null : req.id)}
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold truncate">{req.name}</span>
+                                    {getVerStatusBadge(req.verification_status)}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground truncate">{req.email}</p>
                                 </div>
                               </div>
-                            )}
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {req.verification_status === "pending" && (
+                                  <>
+                                    <Button size="sm" variant="outline" className="gap-1 h-7 text-xs"
+                                      onClick={(e) => { e.stopPropagation(); handleGetAiScore(req); }}
+                                      disabled={req.scoring}>
+                                      {req.scoring ? <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Sparkles className="h-3 w-3 text-primary" />}
+                                      AI Score
+                                    </Button>
+                                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white h-7 text-xs gap-1"
+                                      onClick={(e) => { e.stopPropagation(); handleApprove(req); }}>
+                                      <CheckCircle2 className="h-3 w-3" /> Approve
+                                    </Button>
+                                    <Button size="sm" variant="destructive" className="h-7 text-xs gap-1"
+                                      onClick={(e) => { e.stopPropagation(); setRejectUser(req); setRejectNotes(""); }}>
+                                      <XCircle className="h-3 w-3" /> Reject
+                                    </Button>
+                                  </>
+                                )}
+                                {req.verification_status === "verified" && (
+                                  <Button size="sm" variant="destructive" className="h-7 text-xs gap-1"
+                                    onClick={(e) => { e.stopPropagation(); setRejectUser(req); setRejectNotes(""); }}>
+                                    <XCircle className="h-3 w-3" /> Revoke
+                                  </Button>
+                                )}
+                                {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                              </div>
+                            </button>
 
-                            {/* KYC Images */}
-                            {(req.selfieDataUrl || req.docDataUrl) && (
-                              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {req.selfieDataUrl && (
-                                  <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase text-muted-foreground">Live Selfie</p>
-                                    <div className="relative aspect-square md:aspect-video rounded-lg overflow-hidden border-2 bg-black">
-                                      <img src={req.selfieDataUrl} alt="KYC Selfie" className="w-full h-full object-cover" />
+                            {/* ── Expanded details ── */}
+                            {isExpanded && (
+                              <div className="pb-5 pt-2 px-1 space-y-4">
+
+                                {/* KYC text details */}
+                                {req.kyc_full_name && (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2 bg-muted/20 p-4 rounded-lg border">
+                                      <h4 className="font-semibold flex items-center gap-2 text-sm border-b pb-2">
+                                        <UserSquare2 className="h-4 w-4 text-primary" /> Personal Details
+                                      </h4>
+                                      <p className="text-sm"><span className="text-muted-foreground">Legal Name:</span> {req.kyc_full_name}</p>
+                                      <p className="text-sm"><span className="text-muted-foreground">Mobile:</span> {req.kyc_mobile}</p>
+                                      <p className="text-sm"><span className="text-muted-foreground">Address:</span> {req.kyc_address}</p>
+                                    </div>
+                                    <div className="space-y-2 bg-muted/20 p-4 rounded-lg border">
+                                      <h4 className="font-semibold flex items-center gap-2 text-sm border-b pb-2">
+                                        <IdCard className="h-4 w-4 text-primary" /> Document Details
+                                      </h4>
+                                      <p className="text-sm"><span className="text-muted-foreground">Type:</span> <span className="uppercase">{req.kyc_document_type?.replace('_', ' ')}</span></p>
+                                      <p className="text-sm"><span className="text-muted-foreground">ID Number:</span> {req.kyc_id_number}</p>
                                     </div>
                                   </div>
                                 )}
-                                {req.docDataUrl && (
-                                  <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase text-muted-foreground">Government ID Photo</p>
-                                    <div className="relative aspect-video rounded-lg overflow-hidden border-2 bg-black">
-                                      <img src={req.docDataUrl} alt="KYC Document" className="w-full h-full object-contain" />
+
+                                {/* KYC Images — clickable for fullscreen */}
+                                {(req.selfieDataUrl || req.docDataUrl) && (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {req.selfieDataUrl && (
+                                      <div className="space-y-1">
+                                        <p className="text-xs font-semibold uppercase text-muted-foreground">Live Selfie</p>
+                                        <div
+                                          className="relative aspect-square md:aspect-video rounded-lg overflow-hidden border-2 bg-black cursor-zoom-in group"
+                                          onClick={() => setLightboxImg(req.selfieDataUrl!)}
+                                        >
+                                          <img src={req.selfieDataUrl} alt="KYC Selfie" className="w-full h-full object-cover" />
+                                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                                            <ZoomIn className="h-7 w-7 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                    {req.docDataUrl && (
+                                      <div className="space-y-1">
+                                        <p className="text-xs font-semibold uppercase text-muted-foreground">Government ID Photo</p>
+                                        <div
+                                          className="relative aspect-video rounded-lg overflow-hidden border-2 bg-black cursor-zoom-in group"
+                                          onClick={() => setLightboxImg(req.docDataUrl!)}
+                                        >
+                                          <img src={req.docDataUrl} alt="KYC Document" className="w-full h-full object-contain" />
+                                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                                            <ZoomIn className="h-7 w-7 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* AI Score panel */}
+                                {req.aiScore && (
+                                  <div className="rounded-lg border bg-muted/40 p-5 space-y-4">
+                                    <div className="flex items-center justify-between border-b pb-3">
+                                      <div className="flex items-center gap-2">
+                                        <Sparkles className="h-5 w-5 text-primary" />
+                                        <span className="font-bold text-lg">Gemini Vision Analysis</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium">Confidence:</span>
+                                        <span className={`text-xl font-bold ${getScoreColor(req.aiScore.confidence_score)}`}>
+                                          {req.aiScore.confidence_score}%
+                                        </span>
+                                        <Badge className={`ml-2 ${req.aiScore.recommendation === "Approve" ? "bg-green-600" :
+                                          req.aiScore.recommendation === "Reject" ? "bg-red-600" : "bg-yellow-500"
+                                          } text-white`}>
+                                          {req.aiScore.recommendation}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                      {[
+                                        { label: "Face Match", value: `${req.aiScore.face_match_percentage}%`, ok: req.aiScore.face_match_percentage >= 80 },
+                                        { label: "Doc Authentic", value: req.aiScore.document_authentic ? "Yes" : "No", ok: req.aiScore.document_authentic },
+                                        { label: "Name Match", value: req.aiScore.name_match ? "Yes" : "Mismatch", ok: req.aiScore.name_match },
+                                        { label: "ID Format", value: req.aiScore.id_format_valid ? "Valid" : "Invalid", ok: req.aiScore.id_format_valid },
+                                      ].map(({ label, value, ok }) => (
+                                        <div key={label} className="bg-background rounded-md p-3 border">
+                                          <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                                          <div className="flex items-center gap-2">
+                                            {ok ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
+                                            <span className="font-semibold text-sm">{value}</span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="bg-background rounded-md p-4 border">
+                                      <p className="text-sm font-semibold mb-1">AI Reasoning:</p>
+                                      <p className="text-sm text-foreground/80">{req.aiScore.reasoning}</p>
                                     </div>
                                   </div>
                                 )}
                               </div>
                             )}
                           </div>
-
-                          {/* Action buttons */}
-                          {req.verification_status === "pending" && (
-                            <div className="flex gap-2 flex-shrink-0">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleGetAiScore(req)}
-                                disabled={req.scoring}
-                                className="gap-1.5"
-                              >
-                                {req.scoring ? (
-                                  <>
-                                    <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                    Scoring…
-                                  </>
-                                ) : (
-                                  <>
-                                    <Sparkles className="h-3.5 w-3.5 text-primary" />
-                                    AI Score
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 text-white gap-1.5"
-                                onClick={() => handleApprove(req)}
-                              >
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                className="gap-1.5"
-                                onClick={() => { setRejectUser(req); setRejectNotes(""); }}
-                              >
-                                <XCircle className="h-3.5 w-3.5" />
-                                Reject
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* AI Score panel */}
-                        {req.aiScore && (
-                          <div className="rounded-lg border bg-muted/40 p-5 space-y-4">
-                            <div className="flex items-center justify-between border-b pb-3">
-                              <div className="flex items-center gap-2">
-                                <Sparkles className="h-5 w-5 text-primary" />
-                                <span className="font-bold text-lg">Gemini Vision Analysis</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">Confidence:</span>
-                                <span className={`text-xl font-bold ${getScoreColor(req.aiScore.confidence_score)}`}>
-                                  {req.aiScore.confidence_score}%
-                                </span>
-                                <Badge
-                                  className={`ml-2 ${req.aiScore.recommendation === "Approve" ? "bg-green-600" :
-                                    req.aiScore.recommendation === "Reject" ? "bg-red-600" : "bg-yellow-500"
-                                    } text-white`}
-                                >
-                                  {req.aiScore.recommendation}
-                                </Badge>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              <div className="bg-background rounded-md p-3 border">
-                                <p className="text-xs text-muted-foreground mb-1">Face Match</p>
-                                <div className="flex items-center gap-2">
-                                  {req.aiScore.face_match_percentage >= 80 ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
-                                  <span className="font-semibold">{req.aiScore.face_match_percentage}%</span>
-                                </div>
-                              </div>
-                              <div className="bg-background rounded-md p-3 border">
-                                <p className="text-xs text-muted-foreground mb-1">Doc Authentic</p>
-                                <div className="flex items-center gap-2">
-                                  {req.aiScore.document_authentic ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
-                                  <span className="font-semibold">{req.aiScore.document_authentic ? "Yes" : "No / Suspicious"}</span>
-                                </div>
-                              </div>
-                              <div className="bg-background rounded-md p-3 border">
-                                <p className="text-xs text-muted-foreground mb-1">Name Match</p>
-                                <div className="flex items-center gap-2">
-                                  {req.aiScore.name_match ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
-                                  <span className="font-semibold">{req.aiScore.name_match ? "Yes" : "Mismatch"}</span>
-                                </div>
-                              </div>
-                              <div className="bg-background rounded-md p-3 border">
-                                <p className="text-xs text-muted-foreground mb-1">ID Format</p>
-                                <div className="flex items-center gap-2">
-                                  {req.aiScore.id_format_valid ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
-                                  <span className="font-semibold">{req.aiScore.id_format_valid ? "Valid" : "Invalid"}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="bg-background rounded-md p-4 border mt-2">
-                              <p className="text-sm font-semibold mb-1">AI Reasoning:</p>
-                              <p className="text-sm text-foreground/80">{req.aiScore.reasoning}</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>

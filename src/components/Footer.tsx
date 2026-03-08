@@ -7,7 +7,7 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              CreatorHub
+              Manch360
             </h3>
             <p className="text-muted-foreground text-sm">
               Empowering creators to teach, share, and earn.
@@ -49,7 +49,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>© 2024 CreatorHub. All rights reserved.</p>
+          <p>© 2024 Manch360. All rights reserved.</p>
         </div>
       </div>
     </footer>

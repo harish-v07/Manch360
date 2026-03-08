@@ -180,7 +180,7 @@ export default function Auth() {
         <Card className="max-w-md mx-auto shadow-hover">
           <CardHeader>
             <CardTitle className="text-2xl text-center">
-              {isForgotPassword ? "Reset Password" : isSignup ? "Join CreatorHub" : "Welcome Back"}
+              {isForgotPassword ? "Reset Password" : isSignup ? "Join Manch360" : "Welcome Back"}
             </CardTitle>
             <CardDescription className="text-center">
               {isForgotPassword ? "Enter your email to receive a password reset link" : isSignup ? "Start your creative journey today" : "Sign in to your account"}

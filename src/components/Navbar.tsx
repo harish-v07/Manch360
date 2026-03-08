@@ -52,7 +52,7 @@ export const Navbar = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            CreatorHub
+            Manch360
           </Link>
 
           <div className="flex items-center gap-4">

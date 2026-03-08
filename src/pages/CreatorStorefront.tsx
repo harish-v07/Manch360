@@ -177,7 +177,7 @@ export default function CreatorStorefront() {
           key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_YOUR_KEY_HERE", // Fallback for dev, but should be in env
           amount: orderData.amount,
           currency: orderData.currency,
-          name: "CreatorHub",
+          name: "Manch360",
           description: course.title,
           order_id: orderData.id,
           handler: async function (response: any) {

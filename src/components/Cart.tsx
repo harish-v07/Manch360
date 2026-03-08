@@ -120,7 +120,7 @@ export const Cart = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "CreatorHub",
+        name: "Manch360",
         description: `Purchase of ${items.length} products`,
         order_id: orderData.id,
         handler: async function (response: any) {

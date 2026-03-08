@@ -17,7 +17,7 @@ Follow these steps:
 git clone <YOUR_GIT_URL>
 
 # Step 2: Navigate to the project directory.
-cd creatorhub
+cd manch360
 
 # Step 3: Install the necessary dependencies.
 npm i
@@ -37,5 +37,7 @@ This project is built with:
 - Tailwind CSS
 - Supabase
 - AWS
+- Gemini API
+- Shiprocket
 
 

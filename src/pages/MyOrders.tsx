@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
 import { toast } from "sonner";
-import { ShoppingBag, Package, ExternalLink, MapPin, Truck } from "lucide-react";
+import { ShoppingBag, Package, ExternalLink, MapPin, Truck, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Shipment {
@@ -22,7 +22,7 @@ interface Order {
     created_at: string;
     delivery_address: any;
     product_id: string | null;
-    products: { name: string; type: string } | null;
+    products: { name: string; type: string; file_url?: string; usage_instructions?: string } | null;
     shipments: Shipment[];
 }
 
@@ -69,7 +69,9 @@ export default function MyOrders() {
           product_id,
           products (
             name,
-            type
+            type,
+            file_url,
+            usage_instructions
           ),
           shipments (
             awb_code,
@@ -214,7 +216,35 @@ export default function MyOrders() {
                                         )}
 
                                         {order.products?.type === "digital" && (
-                                            <p className="text-xs text-muted-foreground italic">Digital product – no shipping required.</p>
+                                            <div className="bg-muted/30 rounded-lg p-3 space-y-3">
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <Package className="h-4 w-4 text-primary flex-shrink-0" />
+                                                        <p className="text-sm font-medium">Digital Product</p>
+                                                    </div>
+                                                    {order.products.file_url ? (
+                                                        <Button
+                                                            size="sm"
+                                                            className="gap-2 flex-shrink-0"
+                                                            onClick={() => window.open(order.products!.file_url, "_blank")}
+                                                        >
+                                                            <Download className="h-3 w-3" />
+                                                            Download File
+                                                        </Button>
+                                                    ) : (
+                                                        <span className="text-xs text-muted-foreground">No file provided</span>
+                                                    )}
+                                                </div>
+                                                {order.products.usage_instructions && (
+                                                    <div className="text-sm border-t pt-3 mt-1">
+                                                        <p className="font-semibold mb-1">How to use:</p>
+                                                        <p className="text-muted-foreground whitespace-pre-wrap">{order.products.usage_instructions}</p>
+                                                    </div>
+                                                )}
+                                                {!order.products.usage_instructions && !order.products.file_url && (
+                                                    <p className="text-xs text-muted-foreground italic">Digital product – no shipping required.</p>
+                                                )}
+                                            </div>
                                         )}
                                     </CardContent>
                                 </Card>

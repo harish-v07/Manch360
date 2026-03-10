@@ -81,7 +81,17 @@ export const productSchema = z.object({
     .min(0, 'Price cannot be negative')
     .max(999999, 'Price must be less than 1,000,000'),
   type: z.enum(['digital', 'physical', 'service']),
-  media_urls: z.array(z.string().url()).optional().default([])
+  media_urls: z.array(z.string().url()).optional().default([]),
+  file_url: z.string()
+    .trim()
+    .url('Invalid file URL format')
+    .optional()
+    .or(z.literal('')),
+  usage_instructions: z.string()
+    .trim()
+    .max(5000, 'Instructions must be less than 5000 characters')
+    .optional()
+    .or(z.literal(''))
 });
 
 // Profile validation

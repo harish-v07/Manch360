@@ -6,12 +6,16 @@ export interface S3UploadResult {
     bucket: string;
 }
 
-export const uploadToS3 = async (file: File, path: string): Promise<S3UploadResult> => {
+export const uploadToS3 = async (
+    file: File, 
+    path: string, 
+    onProgress?: (percent: number) => void
+): Promise<S3UploadResult> => {
     // 1. Get presigned URL from Edge Function
     const { data, error: functionError } = await supabase.functions.invoke('get-s3-upload-url', {
         body: {
             fileName: file.name,
-            fileType: file.type,
+            fileType: file.type || 'application/octet-stream',
             path: path,
         },
     });
@@ -22,29 +26,46 @@ export const uploadToS3 = async (file: File, path: string): Promise<S3UploadResu
 
     const { signedUrl, key, bucket, region } = data;
 
-    // 2. Upload file to S3
-    const uploadResponse = await fetch(signedUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-            'Content-Type': file.type,
-        },
+    // 2. Upload file to S3 using XHR for progress tracking
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable && onProgress) {
+                const percentComplete = Math.round((event.loaded / event.total) * 100);
+                onProgress(percentComplete);
+            }
+        });
+
+        xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                const publicUrl = `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+                resolve({
+                    url: publicUrl,
+                    key: key,
+                    bucket: bucket,
+                });
+            } else {
+                console.error("S3 Upload Error Status:", xhr.status, xhr.statusText);
+                console.error("S3 Upload Error Response:", xhr.responseText);
+                reject(new Error(`Failed to upload to S3: ${xhr.statusText}. Details: ${xhr.responseText}`));
+            }
+        });
+
+        xhr.addEventListener('error', () => {
+            console.error("XHR Network Error");
+            reject(new Error("Network error occurred during S3 upload. (Possible firewall/antivirus block)"));
+        });
+
+        xhr.addEventListener('abort', () => {
+            reject(new Error("S3 upload was aborted."));
+        });
+
+        xhr.open('PUT', signedUrl);
+        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+        
+        xhr.send(file);
     });
-
-    if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        console.error("S3 Upload Error Body:", errorText);
-        throw new Error(`Failed to upload to S3: ${uploadResponse.statusText}. Details: ${errorText}`);
-    }
-
-    // 3. Construct the public URL
-    const publicUrl = `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
-
-    return {
-        url: publicUrl,
-        key: key,
-        bucket: bucket,
-    };
 };
 
 export const getS3ViewUrl = async (key: string): Promise<string> => {

@@ -57,6 +57,7 @@ export default function ProductsManager({
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [existingMediaUrls, setExistingMediaUrls] = useState<string[]>([]);
   const [digitalFile, setDigitalFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -177,7 +178,9 @@ export default function ProductsManager({
 
       let finalFileUrl = formData.file_url;
       if (digitalFile) {
-        const { url } = await uploadToS3(digitalFile, "products/files");
+        const { url } = await uploadToS3(digitalFile, "products/files", (percent) => {
+          setUploadProgress(percent);
+        });
         finalFileUrl = url;
       }
 
@@ -193,13 +196,10 @@ export default function ProductsManager({
       });
 
       if (!validation.success) {
-        console.error("ZOD VALIDATION FAILED!", validation.error.format());
         toast.error(validation.error.issues[0].message);
         setUploading(false);
         return;
       }
-      
-      console.log("FINAL VALIDATED DATA TO SAVE:", validation.data);
 
       const {
         data: { user },
@@ -262,6 +262,7 @@ export default function ProductsManager({
       console.error(error);
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -280,6 +281,7 @@ export default function ProductsManager({
     setExistingMediaUrls([]);
     setDigitalFile(null);
     setEditingProduct(null);
+    setUploadProgress(0);
   };
 
   const handleEdit = (product: any) => {
@@ -418,11 +420,21 @@ export default function ProductsManager({
                       <Input
                         id="product-file"
                         type="file"
-                        accept=".zip,.rar,.7z"
+                        accept=".zip,.rar,.7z,application/zip,application/x-zip-compressed,application/octet-stream"
                         className="flex-1 cursor-pointer"
-                        onChange={(e) =>
-                          setDigitalFile(e.target.files?.[0] || null)
-                        }
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          if (file) {
+                            // 200MB limit
+                            if (file.size > 200 * 1024 * 1024) {
+                              toast.error("Digital file must be less than 200MB");
+                              e.target.value = '';
+                              setDigitalFile(null);
+                              return;
+                            }
+                          }
+                          setDigitalFile(file);
+                        }}
                       />
                       {(digitalFile || formData.file_url) && (
                         <span className="text-sm text-green-600 font-medium whitespace-nowrap">
@@ -580,9 +592,11 @@ export default function ProductsManager({
               </div>
               <Button type="submit" className="w-full" disabled={uploading}>
                 {uploading
-                  ? editingProduct
-                    ? "Updating..."
-                    : "Creating..."
+                  ? uploadProgress > 0 && uploadProgress < 100
+                    ? `Uploading (${uploadProgress}%)...`
+                    : editingProduct
+                      ? "Updating..."
+                      : "Creating..."
                   : editingProduct
                     ? "Update Product"
                     : "Create Product"}

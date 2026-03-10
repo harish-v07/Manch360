@@ -1,4 +1,4 @@
-# CreatorHub
+# Manch360
 
 Your all-in-one platform to teach courses, sell products, and grow your creative business.
 
@@ -17,7 +17,7 @@ Follow these steps:
 git clone https://github.com/harish-v07/Manch360.git
 
 # Step 2: Navigate to the project directory.
-cd manch360
+cd Manch360
 
 # Step 3: Install the necessary dependencies.
 npm i

@@ -36,12 +36,33 @@ export default function Auth() {
   }, [searchParams]);
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    // Check if user is already logged in, but skip redirect for PASSWORD_RECOVERY sessions
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        // User clicked a reset link — don't redirect, let ResetPassword page handle it
+        return;
+      }
+      if (event === "SIGNED_IN" && session) {
         navigate("/dashboard");
       }
     });
+
+    // Also handle initial page load (session already exists)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        // Check if it's a recovery session by looking at the URL hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const type = hashParams.get("type");
+        if (type === "recovery") {
+          // It's a password reset flow — redirect to reset page
+          navigate("/reset-password");
+          return;
+        }
+        navigate("/dashboard");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
 

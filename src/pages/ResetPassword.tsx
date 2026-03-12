@@ -18,13 +18,23 @@ export default function ResetPassword() {
     });
 
     useEffect(() => {
-        // Check if user has a valid session from the reset link
+        // Listen for PASSWORD_RECOVERY event - this fires when user clicks the reset link
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === "PASSWORD_RECOVERY") {
+                // Valid reset session — stay on this page
+                return;
+            }
+        });
+
+        // Also check if there's any session at all (in case page is loaded after event fired)
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (!session) {
                 toast.error("Invalid or expired reset link");
                 navigate("/auth");
             }
         });
+
+        return () => subscription.unsubscribe();
     }, [navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -110,7 +120,10 @@ export default function ResetPassword() {
                             <div className="text-center text-sm">
                                 <button
                                     type="button"
-                                    onClick={() => navigate("/auth")}
+                                    onClick={async () => {
+                                        await supabase.auth.signOut();
+                                        navigate("/auth");
+                                    }}
                                     className="text-primary hover:underline"
                                 >
                                     Back to sign in

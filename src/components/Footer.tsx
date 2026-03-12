@@ -49,7 +49,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>© 2024 Manch360. All rights reserved.</p>
+          <p>© 2026 Manch360. All rights reserved.</p>
         </div>
       </div>
     </footer>

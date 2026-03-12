@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { User, LogOut, Shield, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,33 +9,20 @@ import { Cart } from "./Cart";
 
 export const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isResetPasswordPage = location.pathname === "/reset-password";
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const [isRecoverySession, setIsRecoverySession] = useState(false);
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // Check if this is a password recovery session via URL hash
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      if (hashParams.get("type") === "recovery") {
-        setIsRecoverySession(true);
-        return;
-      }
       setSession(session);
       if (session) checkAdminRole(session.user.id);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        // Treat recovery sessions as logged-out in the navbar
-        setIsRecoverySession(true);
-        setSession(null);
-        return;
-      }
-      setIsRecoverySession(false);
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
         checkAdminRole(session.user.id);
@@ -73,7 +60,7 @@ export const Navbar = () => {
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <Cart />
-            {session ? (
+            {session && !isResetPasswordPage ? (
               <>
                 <Link to="/explore">
                   <Button variant="ghost">Explore</Button>
@@ -108,12 +95,24 @@ export const Navbar = () => {
                 <Link to="/explore">
                   <Button variant="ghost">Explore</Button>
                 </Link>
-                <Link to="/auth">
-                  <Button variant="outline">Sign In</Button>
-                </Link>
-                <Link to="/auth?mode=signup">
-                  <Button variant="default">Join</Button>
-                </Link>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    if (isResetPasswordPage) await supabase.auth.signOut();
+                    navigate("/auth");
+                  }}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  variant="default"
+                  onClick={async () => {
+                    if (isResetPasswordPage) await supabase.auth.signOut();
+                    navigate("/auth?mode=signup");
+                  }}
+                >
+                  Join
+                </Button>
               </>
             )}
           </div>

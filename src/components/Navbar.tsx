@@ -44,6 +44,13 @@ export const Navbar = () => {
   };
 
   const handleLogout = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await supabase
+        .from("profiles")
+        .update({ active_session_id: null })
+        .eq("id", session.user.id);
+    }
     localStorage.removeItem("ch_session_token");
     await supabase.auth.signOut();
     navigate("/");

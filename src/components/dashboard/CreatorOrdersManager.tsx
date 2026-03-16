@@ -103,6 +103,46 @@ export default function CreatorOrdersManager() {
         shipped: "bg-blue-100 text-blue-700 border-blue-200",
         delivered: "bg-green-100 text-green-700 border-green-200",
         failed: "bg-red-100 text-red-700 border-red-200",
+        cancelled: "bg-red-100 text-red-700 border-red-200",
+    };
+
+    const cancelOrder = async (orderId: string) => {
+        const confirmed = window.confirm("Mark this order as cancelled? Only do this after cancelling it in Shiprocket.");
+        if (!confirmed) return;
+        try {
+            toast.loading("Processing refund and cancelling order...", { id: "cancel-order" });
+            
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error("Not authenticated");
+            
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const res = await fetch(`${supabaseUrl}/functions/v1/refund-order`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`,
+                    "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                },
+                body: JSON.stringify({ order_id: orderId }),
+            });
+
+            const data = await res.json();
+            
+            if (!res.ok || data.error) {
+                throw new Error(data.error || "Failed to process refund");
+            }
+            
+            // Optimistic update — reflect immediately in UI
+            setOrders(prev => prev.map(o =>
+                o.id === orderId
+                    ? { ...o, shipment_status: "cancelled", status: "cancelled" }
+                    : o
+            ));
+            toast.success("Order cancelled and refund initiated successfully", { id: "cancel-order" });
+        } catch (err: any) {
+            console.error("Cancel/Refund error:", err);
+            toast.error(err.message || "Failed to cancel order", { id: "cancel-order" });
+        }
     };
 
     return (
@@ -201,17 +241,43 @@ export default function CreatorOrdersManager() {
                                                         )}
                                                     </div>
                                                 </div>
-                                                {shipment.awb_code && (
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className="gap-1 text-xs h-7"
-                                                        onClick={() => window.open(`https://shiprocket.co/tracking/${shipment.awb_code}`, "_blank")}
-                                                    >
-                                                        <ExternalLink className="h-3 w-3" />
-                                                        Track
-                                                    </Button>
-                                                )}
+                                                <div className="flex gap-2">
+                                                    {shipment.awb_code && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="gap-1 text-xs h-7"
+                                                            onClick={() => window.open(`https://shiprocket.co/tracking/${shipment.awb_code}`, "_blank")}
+                                                        >
+                                                            <ExternalLink className="h-3 w-3" />
+                                                            Track
+                                                        </Button>
+                                                    )}
+                                                    {order.shipment_status !== "cancelled" && order.shipment_status !== "delivered" && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="gap-1 text-xs h-7 text-red-600 border-red-300 hover:bg-red-50"
+                                                            onClick={() => cancelOrder(order.id)}
+                                                        >
+                                                            Cancel Order
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Cancel button for physical orders without shipment yet */}
+                                        {order.products?.type === "physical" && !shipment && order.shipment_status !== "cancelled" && (
+                                            <div className="flex justify-end">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="gap-1 text-xs h-7 text-red-600 border-red-300 hover:bg-red-50"
+                                                    onClick={() => cancelOrder(order.id)}
+                                                >
+                                                    Cancel Order
+                                                </Button>
                                             </div>
                                         )}
                                     </div>

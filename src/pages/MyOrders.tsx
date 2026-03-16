@@ -38,6 +38,7 @@ const shipmentStatusColors: Record<string, string> = {
     shipped: "bg-blue-100 text-blue-700 border-blue-200",
     delivered: "bg-green-100 text-green-700 border-green-200",
     failed: "bg-red-100 text-red-700 border-red-200",
+    cancelled: "bg-red-100 text-red-700 border-red-200",
 };
 
 export default function MyOrders() {
@@ -204,11 +205,13 @@ export default function MyOrders() {
                                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                         <Truck className="h-4 w-4" />
                                                         <span>
-                                                            {order.shipment_status === "pending"
-                                                                ? "Shipment is being prepared..."
-                                                                : order.shipment_status === "failed"
-                                                                    ? "Shipment could not be created. Please contact support."
-                                                                    : "Awaiting shipment details"}
+                                                            {order.shipment_status === "cancelled"
+                                                                ? "This order has been cancelled."
+                                                                : order.shipment_status === "pending"
+                                                                    ? "Shipment is being prepared..."
+                                                                    : order.shipment_status === "failed"
+                                                                        ? "Shipment could not be created. Please contact support."
+                                                                        : "Awaiting shipment details"}
                                                         </span>
                                                     </div>
                                                 )}

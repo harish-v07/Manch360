@@ -92,7 +92,7 @@ export default function VerificationForm({ onComplete }: { onComplete: () => voi
                     kyc_document_url: docResult.key,
                     kyc_selfie_url: selfieResult.key,
                     verification_status: "pending",
-                    verification_notes: null
+                    verification_notes: "Manual review requested after documentation upload."
                 })
                 .eq("id", user.id);
 
@@ -181,7 +181,7 @@ export default function VerificationForm({ onComplete }: { onComplete: () => voi
                                 <Label htmlFor="idNumber">ID Number</Label>
                                 <Input
                                     id="idNumber"
-                                    placeholder={docType === 'aadhaar' ? "1234 5678 9012" : docType === 'pan' ? "ABCDE1234F" : "ID Number"}
+                                    placeholder="Enter your ID document number"
                                     value={idNumber}
                                     onChange={e => setIdNumber(e.target.value)}
                                 />

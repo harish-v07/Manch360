@@ -47,7 +47,7 @@ serve(async (req) => {
                 id,
                 shipment_status,
                 products ( creator_id ),
-                shipments ( shiprocket_shipment_id, awb_code, courier_name )
+                shipments ( shiprocket_order_id, shiprocket_shipment_id, awb_code, courier_name )
             `)
             .eq('id', order_id)
             .single();
@@ -68,6 +68,7 @@ serve(async (req) => {
         }
 
         const srShipmentId = shipment.shiprocket_shipment_id;
+        const srOrderId = shipment.shiprocket_order_id;
 
         // 5. Authenticate with Shiprocket
         const srEmail = Deno.env.get("SHIPROCKET_EMAIL");
@@ -93,31 +94,115 @@ serve(async (req) => {
         let awbCode = shipment.awb_code;
         let courierName = shipment.courier_name;
 
-        // 6. Generate AWB
+        // 6. Assign AWB and Request Pickup
         if (!awbCode) {
-            console.log(`Requesting AWB for shipment ${srShipmentId}...`);
+            console.log(`Shipment ${srShipmentId} needs AWB. Fetching serviceability...`);
+            
+            // Get postcodes and weights for a more robust serviceability check
+            const { data: fullOrder } = await supabase
+                .from('orders')
+                .select(`
+                    id, 
+                    amount, 
+                    delivery_address,
+                    profiles!orders_user_id_fkey (
+                        pickup_address
+                    )
+                `)
+                .eq('id', order_id)
+                .single();
+            
+            const deliveryAddr = (fullOrder?.delivery_address as any) || {};
+            const pickupAddr = (fullOrder?.profiles as any)?.pickup_address || {};
+            
+            const deliveryPostcode = deliveryAddr.pincode;
+            const pickupPostcode = pickupAddr.pincode || "641030"; // Fallback to Coimbatore
+            const weight = 0.5;
+            const isCod = 0;
+
+            // Use shipment_id instead of order_id to avoid "Order doesn't exist"
+            const serviceUrl = `https://apiv2.shiprocket.in/v1/external/courier/serviceability?pickup_postcode=${pickupPostcode}&delivery_postcode=${deliveryPostcode}&weight=${weight}&cod=${isCod}&shipment_id=${srShipmentId}`;
+            
+            console.log(`Calling serviceability: ${serviceUrl}`);
+            const serviceRes = await fetch(serviceUrl, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${srToken}`
+                }
+            });
+            const serviceData = await serviceRes.json();
+            
+            if (!serviceRes.ok || serviceData.status !== 200) {
+                console.error('Serviceability check failed:', serviceData);
+                throw new Error(`Shiprocket Serviceability Error: ${serviceData.message || 'No services available'}`);
+            }
+
+            const availableCouriers = serviceData.data?.available_courier_companies;
+            if (!availableCouriers || availableCouriers.length === 0) {
+                throw new Error('No courier partners found for this pin code route.');
+            }
+
+            // Select the best courier (Recommended or first available)
+            const bestCourier = availableCouriers.find((c: any) => c.is_recommended === 1) || availableCouriers[0];
+            const courierId = bestCourier.courier_company_id || bestCourier.id;
+            
+            if (!courierId) {
+                throw new Error('Could not determine a valid Courier ID from Shiprocket.');
+            }
+
+            console.log(`Selected courier: ${bestCourier.courier_name} (ID: ${courierId})`);
+
+            // Generate AWB with specific Courier ID
+            const awbPayload = {
+                shipment_id: Number(srShipmentId),
+                courier_id: Number(courierId),
+                is_return: 0 // Explicitly set to non-return
+            };
+            
+            console.log(`Requesting AWB with payload:`, awbPayload);
             const awbRes = await fetch("https://apiv2.shiprocket.in/v1/external/courier/assign/awb", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${srToken}`
                 },
-                body: JSON.stringify({
-                    shipment_id: srShipmentId
-                })
+                body: JSON.stringify(awbPayload)
             });
+            
             const awbData = await awbRes.json();
-            if (awbRes.ok && awbData.awb_assign_status) {
+            
+            // Check for success (Shiprocket uses various success codes)
+            if (awbRes.ok && (awbData.awb_assign_status === 1 || awbData.status === 1 || awbData.status_code === 1)) {
                 awbCode = awbData.response?.data?.awb_code || awbCode;
-                courierName = awbData.response?.data?.courier_name || courierName;
+                courierName = awbData.response?.data?.courier_name || bestCourier.courier_name;
                 console.log(`AWB assigned: ${awbCode} via ${courierName}`);
             } else {
-                console.error(`Failed to assign AWB:`, awbData);
-                throw new Error(awbData.message || 'Failed to generate AWB tracking code from Shiprocket');
+                console.error(`Shiprocket AWB Assignment Failed:`, awbData);
+                let errMsg = awbData.message || 'Failed to assign AWB';
+                
+                // Handle specific compliance/flagged account error
+                if (errMsg.toLowerCase().includes('disputed') || errMsg.toLowerCase().includes('compliance')) {
+                    errMsg = "Your Shiprocket account is flagged for compliance. Please contact compliance@shiprocket.com to verify your account before you can ship via API.";
+                }
+                
+                // Inspect errors object if it exists
+                if (awbData.errors) {
+                    const errorDetails = typeof awbData.errors === 'string' 
+                        ? awbData.errors 
+                        : JSON.stringify(awbData.errors);
+                    errMsg = `${errMsg}: ${errorDetails}`;
+                }
+                
+                if (errMsg.toLowerCase().includes('balance') || errMsg.toLowerCase().includes('credit')) {
+                    errMsg = "Insufficient Shiprocket wallet balance. Please top up your wallet.";
+                }
+                
+                throw new Error(errMsg);
             }
         }
 
-        // 7. Request Pickup
+        // 8. Request Pickup
         console.log(`Requesting pickup for shipment ${srShipmentId}...`);
         const pickupRes = await fetch("https://apiv2.shiprocket.in/v1/external/courier/generate/pickup", {
             method: "POST",
@@ -126,7 +211,7 @@ serve(async (req) => {
                 "Authorization": `Bearer ${srToken}`
             },
             body: JSON.stringify({
-                shipment_id: [srShipmentId]
+                shipment_id: [Number(srShipmentId)]
             })
         });
         const pickupData = await pickupRes.json();

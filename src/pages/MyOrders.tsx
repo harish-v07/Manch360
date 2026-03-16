@@ -7,6 +7,17 @@ import { Navbar } from "@/components/Navbar";
 import { toast } from "sonner";
 import { ShoppingBag, Package, ExternalLink, MapPin, Truck, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Shipment {
     awb_code: string | null;
@@ -96,6 +107,39 @@ export default function MyOrders() {
 
     const handleTrack = (awb: string) => {
         window.open(`https://shiprocket.co/tracking/${awb}`, "_blank");
+    };
+
+    const cancelOrder = async (orderId: string) => {
+        try {
+            toast.loading("Processing refund and cancelling order...", { id: `cancel-${orderId}` });
+            
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error("Not authenticated");
+            
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const res = await fetch(`${supabaseUrl}/functions/v1/refund-order`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`,
+                    "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                },
+                body: JSON.stringify({ order_id: orderId }),
+            });
+
+            const data = await res.json();
+            
+            if (!res.ok || data.error) {
+                throw new Error(data.error || "Failed to process cancellation");
+            }
+            
+            // Refresh to get the latest status
+            await fetchOrders();
+            toast.success("Order cancelled and refund initiated successfully", { id: `cancel-${orderId}` });
+        } catch (err: any) {
+            console.error("Cancel error:", err);
+            toast.error(err.message || "Failed to cancel order", { id: `cancel-${orderId}` });
+        }
     };
 
     return (
@@ -202,17 +246,49 @@ export default function MyOrders() {
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                        <Truck className="h-4 w-4" />
-                                                        <span>
-                                                            {order.shipment_status === "cancelled"
-                                                                ? "This order has been cancelled."
-                                                                : order.shipment_status === "pending"
-                                                                    ? "Shipment is being prepared..."
-                                                                    : order.shipment_status === "failed"
-                                                                        ? "Shipment could not be created. Please contact support."
-                                                                        : "Awaiting shipment details"}
-                                                        </span>
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                            <Truck className="h-4 w-4" />
+                                                            <span>
+                                                                {order.shipment_status === "cancelled"
+                                                                    ? "This order has been cancelled."
+                                                                    : order.shipment_status === "pending"
+                                                                        ? "Shipment is being prepared..."
+                                                                        : order.shipment_status === "failed"
+                                                                            ? "Shipment could not be created. Please contact support."
+                                                                            : "Awaiting shipment details"}
+                                                            </span>
+                                                        </div>
+                                                        {order.shipment_status === "pending" && order.status !== "cancelled" && (
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        className="gap-1 text-xs h-7 text-red-600 border-red-300 hover:bg-red-50 flex-shrink-0"
+                                                                    >
+                                                                        Cancel Order
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Cancel your order?</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            Are you sure you want to cancel this order? This will immediately process a refund to your original payment method. This action cannot be undone.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Go Back</AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            onClick={() => cancelOrder(order.id)}
+                                                                            className="bg-red-600 hover:bg-red-700 text-white"
+                                                                        >
+                                                                            Confirm Cancellation
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>

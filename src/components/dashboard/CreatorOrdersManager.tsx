@@ -5,6 +5,17 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Package, MapPin, AlertTriangle, ExternalLink, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Order {
     id: string;
@@ -24,6 +35,7 @@ export default function CreatorOrdersManager() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [pickupRegistered, setPickupRegistered] = useState(true);
+    const [shippingOrderId, setShippingOrderId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchOrders();
@@ -107,8 +119,6 @@ export default function CreatorOrdersManager() {
     };
 
     const cancelOrder = async (orderId: string) => {
-        const confirmed = window.confirm("Mark this order as cancelled? Only do this after cancelling it in Shiprocket.");
-        if (!confirmed) return;
         try {
             toast.loading("Processing refund and cancelling order...", { id: "cancel-order" });
             
@@ -142,6 +152,75 @@ export default function CreatorOrdersManager() {
         } catch (err: any) {
             console.error("Cancel/Refund error:", err);
             toast.error(err.message || "Failed to cancel order", { id: "cancel-order" });
+        }
+    };
+    const handleCreateShipment = async (orderId: string) => {
+        try {
+            setShippingOrderId(orderId);
+            toast.loading("Connecting to Shiprocket...", { id: `ship-${orderId}` });
+            
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error("Not authenticated");
+            
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const res = await fetch(`${supabaseUrl}/functions/v1/create-shipment`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`,
+                    "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                },
+                body: JSON.stringify({ order_id: orderId }),
+            });
+
+            const data = await res.json();
+            
+            if (!res.ok || data.error) {
+                throw new Error(data.error || "Failed to create shipment");
+            }
+            
+            toast.success("Shipment created successfully! Please click 'Ready to Ship' next.", { id: `ship-${orderId}` });
+            await fetchOrders();
+        } catch (err: any) {
+            console.error("Shipping error:", err);
+            toast.error(err.message || "Failed to create shipment", { id: `ship-${orderId}` });
+        } finally {
+            setShippingOrderId(null);
+        }
+    };
+
+    const handleReadyToShip = async (orderId: string) => {
+        try {
+            setShippingOrderId(orderId);
+            toast.loading("Generating AWB...", { id: `ready-${orderId}` });
+            
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error("Not authenticated");
+            
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const res = await fetch(`${supabaseUrl}/functions/v1/ready-to-ship`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`,
+                    "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                },
+                body: JSON.stringify({ order_id: orderId }),
+            });
+
+            const data = await res.json();
+            
+            if (!res.ok || data.error) {
+                throw new Error(data.error || "Failed to process Ready to Ship request");
+            }
+            
+            toast.success("AWB assigned and pickup requested!", { id: `ready-${orderId}` });
+            await fetchOrders();
+        } catch (err: any) {
+            console.error("Ready to ship error:", err);
+            toast.error(err.message || "Failed to process request", { id: `ready-${orderId}` });
+        } finally {
+            setShippingOrderId(null);
         }
     };
 
@@ -242,7 +321,7 @@ export default function CreatorOrdersManager() {
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    {shipment.awb_code && (
+                                                    {shipment.awb_code ? (
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
@@ -252,34 +331,96 @@ export default function CreatorOrdersManager() {
                                                             <ExternalLink className="h-3 w-3" />
                                                             Track
                                                         </Button>
-                                                    )}
-                                                    {order.shipment_status !== "cancelled" && order.shipment_status !== "delivered" && (
+                                                    ) : order.shipment_status !== "cancelled" && (
                                                         <Button
                                                             size="sm"
-                                                            variant="outline"
-                                                            className="gap-1 text-xs h-7 text-red-600 border-red-300 hover:bg-red-50"
-                                                            onClick={() => cancelOrder(order.id)}
+                                                            className="gap-1 text-xs h-7 bg-green-600 text-white hover:bg-green-700"
+                                                            onClick={() => handleReadyToShip(order.id)}
+                                                            disabled={shippingOrderId === order.id}
                                                         >
-                                                            Cancel Order
+                                                            <Truck className="h-3 w-3" />
+                                                            {shippingOrderId === order.id ? "Processing..." : "Ready to Ship"}
                                                         </Button>
+                                                    )}
+                                                    
+                                                    {order.shipment_status !== "cancelled" && order.shipment_status !== "delivered" && (
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="gap-1 text-xs h-7 text-red-600 border-red-300 hover:bg-red-50"
+                                                                >
+                                                                    Cancel Order
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        This action will immediately refund the buyer via Razorpay and cancel the shipment in Shiprocket if it has been created. This action cannot be undone.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Keep Order</AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        onClick={() => cancelOrder(order.id)}
+                                                                        className="bg-red-600 hover:bg-red-700 text-white"
+                                                                    >
+                                                                        Yes, Cancel Order
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
                                                     )}
                                                 </div>
                                             </div>
                                         )}
 
-                                        {/* Cancel button for physical orders without shipment yet */}
+                                        {/* Create Shipment / Cancel button for physical orders where shipment is completely missing */}
                                         {order.products?.type === "physical" && !shipment && order.shipment_status !== "cancelled" && (
-                                            <div className="flex justify-end">
+                                            <div className="flex justify-end gap-2">
                                                 <Button
                                                     size="sm"
-                                                    variant="outline"
-                                                    className="gap-1 text-xs h-7 text-red-600 border-red-300 hover:bg-red-50"
-                                                    onClick={() => cancelOrder(order.id)}
+                                                    className="gap-1 text-xs h-7 bg-primary text-primary-foreground hover:bg-primary/90"
+                                                    onClick={() => handleCreateShipment(order.id)}
+                                                    disabled={!pickupRegistered || shippingOrderId === order.id}
                                                 >
-                                                    Cancel Order
+                                                    <Truck className="h-3 w-3" />
+                                                    {shippingOrderId === order.id ? "Creating..." : "Create Shipment"}
                                                 </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="gap-1 text-xs h-7 text-red-600 border-red-300 hover:bg-red-50"
+                                                        >
+                                                            Cancel Order
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action will immediately refund the buyer via Razorpay and cancel the order. This action cannot be undone.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Keep Order</AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                onClick={() => cancelOrder(order.id)}
+                                                                className="bg-red-600 hover:bg-red-700 text-white"
+                                                            >
+                                                                Yes, Cancel Order
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </div>
                                         )}
+
+
                                     </div>
                                 );
                             })}

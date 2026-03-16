@@ -196,24 +196,10 @@ export default function ProductDetail() {
                             },
                             shipment_status: 'pending',
                         }).select('id');
-
+                        
                         if (orderInsertError) {
                             toast.error("Payment successful but order creation failed. Please contact support.");
                         } else {
-                            toast.success("Payment successful! Your order has been placed.");
-
-                            // Create shipment for physical products
-                            if (product.type === 'physical') {
-                                try {
-                                    const orderId = (orderResult as any)?.[0]?.id;
-                                    if (orderId) {
-                                        await invokeEdgeFunction('create-shipment', { order_id: orderId });
-                                    }
-                                } catch (e) {
-                                    console.warn('Shipment creation failed:', e);
-                                }
-                            }
-
                             setCheckoutDialogOpen(false);
                             setTimeout(() => navigate("/my-orders"), 2000);
                         }

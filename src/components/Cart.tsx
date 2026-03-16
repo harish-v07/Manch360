@@ -10,6 +10,7 @@ import { Badge } from "./ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState } from "react";
+import { S3Media } from "@/components/S3Media";
 
 export const Cart = () => {
   const { items, removeItem, updateQuantity, getTotalItems, getTotalPrice, clearCart } = useCart();
@@ -166,23 +167,7 @@ export const Cart = () => {
 
             if (hasError) {
               toast.error("Payment successful but order creation failed. Please contact support.");
-            } else {
               toast.success("Payment successful! Your orders have been placed.");
-
-              // Create shipments for physical products
-              const physicalOrders = results.filter(
-                (result, idx) => !result.error && items[idx]?.type === 'physical'
-              );
-              for (const result of physicalOrders) {
-                const orderId = result.data?.[0]?.id;
-                if (orderId) {
-                  try {
-                    await invokeEdgeFunction('create-shipment', { order_id: orderId });
-                  } catch (e) {
-                    console.warn('Shipment creation failed for order', orderId, e);
-                  }
-                }
-              }
 
               clearCart();
               setCheckoutDialogOpen(false);
@@ -333,7 +318,7 @@ export const Cart = () => {
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-3 text-sm">
                     {item.image_url && (
-                      <img
+                      <S3Media
                         src={item.image_url}
                         alt={item.name}
                         className="w-16 h-16 object-cover rounded"

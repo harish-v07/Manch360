@@ -233,17 +233,48 @@ export default function MyOrders() {
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        {shipment.awb_code && (
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                className="gap-2 flex-shrink-0"
-                                                                onClick={() => handleTrack(shipment.awb_code!)}
-                                                            >
-                                                                <ExternalLink className="h-3 w-3" />
-                                                                Track
-                                                            </Button>
-                                                        )}
+                                                        <div className="flex gap-2">
+                                                            {shipment.awb_code ? (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="gap-2 flex-shrink-0"
+                                                                    onClick={() => handleTrack(shipment.awb_code!)}
+                                                                >
+                                                                    <ExternalLink className="h-3 w-3" />
+                                                                    Track
+                                                                </Button>
+                                                            ) : order.status !== "cancelled" && (
+                                                                <AlertDialog>
+                                                                    <AlertDialogTrigger asChild>
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="outline"
+                                                                            className="gap-1 text-xs h-7 text-red-600 border-red-300 hover:bg-red-50 flex-shrink-0"
+                                                                        >
+                                                                            Cancel Order
+                                                                        </Button>
+                                                                    </AlertDialogTrigger>
+                                                                    <AlertDialogContent>
+                                                                        <AlertDialogHeader>
+                                                                            <AlertDialogTitle>Cancel your order?</AlertDialogTitle>
+                                                                            <AlertDialogDescription>
+                                                                                Are you sure you want to cancel this order? This will immediately process a refund to your original payment method. This action cannot be undone.
+                                                                            </AlertDialogDescription>
+                                                                        </AlertDialogHeader>
+                                                                        <AlertDialogFooter>
+                                                                            <AlertDialogCancel>Go Back</AlertDialogCancel>
+                                                                            <AlertDialogAction
+                                                                                onClick={() => cancelOrder(order.id)}
+                                                                                className="bg-red-600 hover:bg-red-700 text-white"
+                                                                            >
+                                                                                Confirm Cancellation
+                                                                            </AlertDialogAction>
+                                                                        </AlertDialogFooter>
+                                                                    </AlertDialogContent>
+                                                                </AlertDialog>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center justify-between gap-4">

@@ -35,7 +35,11 @@ export const Footer = () => {
             <ul className="space-y-2 text-sm">
               <li className="text-muted-foreground">About</li>
               <li className="text-muted-foreground">FAQ</li>
-              <li className="text-muted-foreground">Contact</li>
+              <li>
+                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
+                  Contact
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -16,6 +16,7 @@ import MyOrders from "./pages/MyOrders";
 import LessonsManager from "./components/dashboard/LessonsManager";
 import CoursePreview from "./pages/CoursePreview";
 import DigitalProductViewer from "./pages/DigitalProductViewer";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/product/:productId" element={<ProductDetail />} />
           <Route path="/digital-product/:productId" element={<DigitalProductViewer />} />
           <Route path="/my-orders" element={<MyOrders />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

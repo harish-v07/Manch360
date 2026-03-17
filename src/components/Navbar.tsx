@@ -57,53 +57,46 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-      <div className="container mx-auto px-4 py-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-md border-b border-border/40 transition-all duration-300">
+      <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <Link to="/" className="text-2xl font-black tracking-tighter text-foreground hover:opacity-80 transition-opacity">
             Manch360
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="hidden md:flex items-center gap-1 mr-2">
+              <Link to="/explore">
+                <Button variant="ghost" className="font-semibold text-sm">Explore</Button>
+              </Link>
+            </div>
+            
             <ThemeToggle />
             <Cart />
+            
             {session && !isResetPasswordPage ? (
-              <>
-                <Link to="/explore">
-                  <Button variant="ghost">Explore</Button>
-                </Link>
-                <Link to="/dashboard">
-                  <Button variant="ghost">
-                    <User className="mr-2 h-4 w-4" />
+              <div className="flex items-center gap-2">
+                <Link to="/dashboard" className="hidden sm:block">
+                  <Button variant="ghost" className="font-semibold">
                     Dashboard
                   </Button>
                 </Link>
-                <Link to="/my-orders">
-                  <Button variant="ghost">
-                    <ShoppingBag className="mr-2 h-4 w-4" />
-                    My Orders
-                  </Button>
-                </Link>
                 {isAdmin && (
-                  <Link to="/admin">
-                    <Button variant="ghost" className="text-purple-500 hover:text-purple-600 hover:bg-purple-500/10">
-                      <Shield className="mr-2 h-4 w-4" />
+                  <Link to="/admin" className="hidden lg:block">
+                    <Button variant="ghost" className="text-accent hover:text-accent hover:bg-accent/10 font-bold">
                       Admin
                     </Button>
                   </Link>
                 )}
-                <Button variant="ghost" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
+                <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full">
+                  <LogOut className="h-4 w-4" />
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
-                <Link to="/explore">
-                  <Button variant="ghost">Explore</Button>
-                </Link>
+              <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
+                  variant="ghost"
+                  className="font-semibold text-sm hidden sm:flex"
                   onClick={async () => {
                     if (isResetPasswordPage) await supabase.auth.signOut();
                     navigate("/auth");
@@ -113,6 +106,7 @@ export const Navbar = () => {
                 </Button>
                 <Button
                   variant="default"
+                  className="rounded-full px-6 font-bold shadow-lg shadow-primary/20"
                   onClick={async () => {
                     if (isResetPasswordPage) await supabase.auth.signOut();
                     navigate("/auth?mode=signup");
@@ -120,7 +114,7 @@ export const Navbar = () => {
                 >
                   Join
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>

@@ -206,6 +206,20 @@ export default function Landing() {
                 </Link>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-16 border-t border-white/5 relative z-10">
+              {[
+                "KYC Verified Sellers",
+                "Secure Payment Handling",
+                "24/7 Creator support"
+              ].map((feature, i) => (
+                <div key={i} className="flex items-center justify-center gap-2 text-white/40 text-sm font-medium">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500/80" />
+                  {feature}
+                </div>
+              ))}
+            </div>
+
             {/* Premium background glow for the dark CTA */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
           </div>

@@ -76,6 +76,11 @@ export const Navbar = () => {
             
             {session && !isResetPasswordPage ? (
               <div className="flex items-center gap-2">
+                <Link to="/my-orders" className="hidden sm:block">
+                  <Button variant="ghost" className="font-semibold">
+                    My Orders
+                  </Button>
+                </Link>
                 <Link to="/dashboard" className="hidden sm:block">
                   <Button variant="ghost" className="font-semibold">
                     Dashboard

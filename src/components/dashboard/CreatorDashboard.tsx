@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/popover";
 import CreatorOrdersManager from "./CreatorOrdersManager";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import CoursePreviewInline from "./CoursePreviewInline";
 
 interface CreatorDashboardProps {
   activeTab?: string;
@@ -44,6 +45,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
   const [previousTab, setPreviousTab] = useState("dashboard");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [previewCourseId, setPreviewCourseId] = useState<string | null>(null);
 
   const [stats, setStats] = useState({
     totalCourses: 0,
@@ -80,6 +82,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
       setPreviousTab(activeTab);
       setIsSettingsOpen(false);
       setShowAddModal(false); // Reset add modal state when switching tabs
+      setPreviewCourseId(null); // Clear course preview when switching tabs
     }
   }, [activeTab]);
 
@@ -174,8 +177,9 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
           {/* Header Section */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-12 px-2">
             <div className="flex-1 min-w-0">
-            <h1 className="text-3xl md:text-4xl font-black text-black dark:text-white tracking-tight transition-all duration-500 overflow-hidden text-ellipsis whitespace-nowrap">
-              {activeTab === "dashboard" ? `Welcome back, ${profile?.name || 'Creator'}` : 
+             <h1 className="text-3xl md:text-4xl font-black text-black dark:text-white tracking-tight transition-all duration-500 overflow-hidden text-ellipsis whitespace-nowrap">
+              {previewCourseId ? "Course Preview" :
+               activeTab === "dashboard" ? `Welcome back, ${profile?.name || 'Creator'}` : 
                activeTab === "courses" ? "Courses Manager" : 
                activeTab === "products" ? "Products Store" : 
                activeTab === "orders" ? "Sales & Orders" : 
@@ -183,15 +187,19 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
                activeTab === "explore" ? "Creator Network" : "Settings"}
             </h1>
             <p className="text-base md:text-lg text-gray-500 dark:text-zinc-500 font-medium transition-colors mt-1">
-                {activeTab === "dashboard" ? "Here's what's happening today." : 
+                {previewCourseId ? "Review your course content as it appears to learners." :
+                 activeTab === "dashboard" ? "Here's what's happening today." : 
                  activeTab === "explore" ? "Connect with other creators and browse the marketplace." :
                  `Manage your ${activeTab} content and track performance.`}
               </p>
             </div>
             
             <div className="flex items-center gap-3">
-              {/* Only show Share button on Dashboard tab */}
-              {activeTab === "dashboard" && (
+              {/* Hide these buttons in preview mode */}
+              {!previewCourseId && (
+                <>
+                  {/* Only show Share button on Dashboard tab */}
+                  {activeTab === "dashboard" && (
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="h-11 px-6 rounded-2xl border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900 text-gray-700 dark:text-zinc-300 font-bold transition-all hover:scale-105 active:scale-95 shadow-sm">
@@ -233,11 +241,13 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
                   {getAddButtonText()}
                 </Button>
               )}
+                </>
+              )}
             </div>
           </div>
 
-          {/* Stats Section - ONLY visible on Dashboard tab */}
-          {activeTab === "dashboard" && (
+          {/* Stats Section - ONLY visible on Dashboard tab and NOT in preview mode */}
+          {activeTab === "dashboard" && !previewCourseId && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 px-2 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
               <StatCard label="Active Courses" value={stats.totalCourses} icon={<BookOpen className="h-5 w-5 text-black dark:text-white" />} color="bg-indigo-50 dark:bg-zinc-900/40" borderColor="dark:border-indigo-500/10" />
               <StatCard label="Total Revenue" value={`₹${stats.totalSales.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5 text-black dark:text-white" />} color="bg-emerald-50 dark:bg-zinc-900/40" sub="Last 30 days" borderColor="dark:border-emerald-500/10" />
@@ -257,11 +267,19 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
                 </div>
               </TabsContent>
               <TabsContent value="courses" className="mt-0 outline-none">
-                <CoursesManager 
-                  onCourseChange={fetchStats} 
-                  isAddDialogOpen={activeTab === "courses" && showAddModal}
-                  onAddDialogChange={(open) => setShowAddModal(open)}
-                />
+                {previewCourseId ? (
+                  <CoursePreviewInline 
+                    courseId={previewCourseId} 
+                    onBack={() => setPreviewCourseId(null)} 
+                  />
+                ) : (
+                  <CoursesManager 
+                    onCourseChange={fetchStats} 
+                    isAddDialogOpen={activeTab === "courses" && showAddModal}
+                    onAddDialogChange={(open) => setShowAddModal(open)}
+                    onViewCourse={(id) => setPreviewCourseId(id)}
+                  />
+                )}
               </TabsContent>
               <TabsContent value="products" className="mt-0 outline-none">
                 <ProductsManager 

@@ -18,9 +18,10 @@ interface CoursesManagerProps {
   onCourseChange?: () => void;
   isAddDialogOpen?: boolean;
   onAddDialogChange?: (open: boolean) => void;
+  onViewCourse?: (courseId: string) => void;
 }
 
-export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddDialogChange }: CoursesManagerProps) {
+export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddDialogChange, onViewCourse }: CoursesManagerProps) {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<any[]>([]);
   const [courseLearners, setCourseLearners] = useState<Record<string, number>>({});
@@ -297,7 +298,7 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => navigate(`/course/${course.id}`)}
+                      onClick={() => onViewCourse ? onViewCourse(course.id) : navigate(`/course/${course.id}`)}
                       title="View Course & Comments"
                       className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-white"
                     >

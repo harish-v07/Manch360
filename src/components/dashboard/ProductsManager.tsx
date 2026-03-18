@@ -332,28 +332,27 @@ export default function ProductsManager({
   };
 
   if (loading) {
-    return <div className="text-center py-8 dark:text-zinc-500 transition-colors">Loading products...</div>;
+    return <div className="text-center py-6 dark:text-zinc-500 transition-colors text-sm">Loading products...</div>;
   }
 
   return (
     <div>
-      {/* Redundant header and button moved to parent CreatorDashboard.tsx header area */}
       <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="max-h-[90vh] flex flex-col dark:bg-zinc-950 dark:border-zinc-800">
+        <DialogContent className="max-h-[90vh] flex flex-col dark:bg-zinc-950 dark:border-zinc-800 rounded-3xl max-w-xl">
           <DialogHeader>
-            <DialogTitle className="dark:text-white transition-colors">
+            <DialogTitle className="text-xl dark:text-white transition-colors">
               {editingProduct ? "Edit Product" : "Create New Product"}
             </DialogTitle>
-            <DialogDescription className="dark:text-zinc-500 transition-colors">
+            <DialogDescription className="text-sm dark:text-zinc-500 transition-colors">
               {editingProduct
                 ? "Update your product details"
                 : "Add a new product to your storefront"}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="dark:text-zinc-300">Product Name</Label>
+                <Label htmlFor="name" className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Product Name</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -361,24 +360,24 @@ export default function ProductsManager({
                   setFormData({ ...formData, name: e.target.value })
                 }
                 required
-                className="dark:bg-zinc-900 dark:border-zinc-800"
+                className="h-11 dark:bg-zinc-900 dark:border-zinc-800 rounded-xl"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description" className="dark:text-zinc-300">Description</Label>
+              <Label htmlFor="description" className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                rows={4}
-                className="dark:bg-zinc-900 dark:border-zinc-800"
+                rows={3}
+                className="dark:bg-zinc-900 dark:border-zinc-800 rounded-xl text-sm"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price" className="dark:text-zinc-300">Price (₹)</Label>
+                <Label htmlFor="price" className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Price (₹)</Label>
                 <Input
                   id="price"
                   type="number"
@@ -388,18 +387,18 @@ export default function ProductsManager({
                     setFormData({ ...formData, price: e.target.value })
                   }
                   required
-                  className="dark:bg-zinc-900 dark:border-zinc-800"
+                  className="h-11 dark:bg-zinc-900 dark:border-zinc-800 rounded-xl"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="type" className="dark:text-zinc-300">Type</Label>
+                <Label htmlFor="type" className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Type</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(
                     value: "digital" | "physical" | "service",
                   ) => setFormData({ ...formData, type: value })}
                 >
-                  <SelectTrigger className="dark:bg-zinc-900 dark:border-zinc-800">
+                  <SelectTrigger className="h-11 dark:bg-zinc-900 dark:border-zinc-800 rounded-xl text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-zinc-950 dark:border-zinc-800">
@@ -412,19 +411,19 @@ export default function ProductsManager({
             </div>
 
             {formData.type === "digital" && (
-              <div className="space-y-4 border rounded-lg p-4 bg-muted/30 dark:bg-zinc-900/50 dark:border-zinc-800 transition-colors">
-                <h3 className="font-semibold text-sm dark:text-zinc-200">
-                  Digital Product File & Instructions
+              <div className="space-y-4 border rounded-xl p-3 bg-muted/30 dark:bg-zinc-900/50 dark:border-zinc-800 transition-colors">
+                <h3 className="font-bold text-[10px] dark:text-zinc-200 uppercase tracking-widest">
+                  Digital Product Details
                 </h3>
 
                 <div className="space-y-2">
-                  <Label htmlFor="product-file" className="dark:text-zinc-400">Product File (.zip)</Label>
-                  <div className="flex items-center gap-4">
+                  <Label htmlFor="product-file" className="text-[10px] dark:text-zinc-400 font-bold">FILE (.ZIP)</Label>
+                  <div className="flex items-center gap-3">
                     <Input
                       id="product-file"
                       type="file"
                       accept=".zip,.rar,.7z,application/zip,application/x-zip-compressed,application/octet-stream"
-                      className="flex-1 cursor-pointer dark:bg-zinc-900 dark:border-zinc-800"
+                      className="h-10 text-xs flex-1 cursor-pointer dark:bg-zinc-900 dark:border-zinc-800 rounded-xl"
                       onChange={(e) => {
                         const file = e.target.files?.[0] || null;
                         if (file) {
@@ -440,18 +439,15 @@ export default function ProductsManager({
                       }}
                     />
                     {(digitalFile || formData.file_url) && (
-                      <span className="text-sm text-green-600 dark:text-emerald-400 font-medium whitespace-nowrap">
-                        {digitalFile ? digitalFile.name : "File uploaded"}
+                      <span className="text-[10px] text-green-600 dark:text-emerald-400 font-black whitespace-nowrap uppercase">
+                        {digitalFile ? "READY" : "UPLOADED"}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground dark:text-zinc-500 mt-1 transition-colors">
-                    Upload the file that buyers will download after purchase.
-                  </p>
                 </div>
 
-                <div className="space-y-2 mt-4">
-                  <Label htmlFor="usage_instructions" className="dark:text-zinc-400">
+                <div className="space-y-2 mt-3">
+                  <Label htmlFor="usage_instructions" className="text-[10px] dark:text-zinc-400 font-bold uppercase tracking-widest">
                     Usage Instructions
                   </Label>
                   <Textarea
@@ -463,38 +459,38 @@ export default function ProductsManager({
                         usage_instructions: e.target.value,
                       })
                     }
-                    placeholder="Explain how to run, install, or use this digital product..."
-                    rows={4}
-                    className="dark:bg-zinc-900 dark:border-zinc-800"
+                    placeholder="Instructions for the buyer..."
+                    rows={3}
+                    className="dark:bg-zinc-900 dark:border-zinc-800 rounded-xl text-xs"
                   />
                 </div>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label className="dark:text-zinc-300">Product Images/Videos (Multiple)</Label>
-              <div className="border-2 border-dashed rounded-lg p-4 dark:border-zinc-800 transition-colors">
+              <Label className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Product Media</Label>
+              <div className="border border-dashed rounded-xl p-3 dark:border-zinc-800 transition-colors">
                 {/* Show existing media */}
                 {existingMediaUrls.length > 0 && (
                   <div className="space-y-2 mb-4">
-                    <p className="text-sm text-muted-foreground dark:text-zinc-500 transition-colors">
-                      Existing Media
+                    <p className="text-[10px] text-muted-foreground dark:text-zinc-500 font-bold uppercase tracking-widest">
+                      Existing
                     </p>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-3">
                       {existingMediaUrls.map((url, index) => (
-                        <div key={`existing-${index}`} className="relative group">
+                        <div key={`existing-${index}`} className="relative group aspect-square">
                           <S3Media
                             src={url}
-                            className="w-full h-32 object-cover rounded dark:opacity-80 group-hover:opacity-100 transition-opacity"
+                            className="w-full h-full object-cover rounded-lg dark:opacity-80 group-hover:opacity-100 transition-opacity"
                           />
                           <Button
                             type="button"
                             variant="destructive"
                             size="icon"
-                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute -top-1 -right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
                             onClick={() => removeExistingMedia(index)}
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-2.5 w-2.5" />
                           </Button>
                         </div>
                       ))}
@@ -504,46 +500,45 @@ export default function ProductsManager({
 
                 {/* Show new media previews */}
                 {mediaPreviews.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {existingMediaUrls.length > 0 && (
-                      <p className="text-sm text-muted-foreground dark:text-zinc-500 transition-colors">
-                        New Media
+                      <p className="text-[10px] text-muted-foreground dark:text-zinc-500 font-bold uppercase tracking-widest">
+                        New
                       </p>
                     )}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-3">
                       {mediaPreviews.map((preview, index) => (
-                        <div key={index} className="relative group">
+                        <div key={index} className="relative group aspect-square">
                           {mediaFiles[index]?.type.startsWith("video/") ? (
                             <video
                               src={preview}
-                              className="w-full h-32 object-cover rounded dark:opacity-80 group-hover:opacity-100 transition-opacity"
-                              controls
+                              className="w-full h-full object-cover rounded-lg dark:opacity-80 group-hover:opacity-100 transition-opacity"
                             />
                           ) : (
                             <img
                               src={preview}
                               alt={`Preview ${index + 1}`}
-                              className="w-full h-32 object-cover rounded dark:opacity-80 group-hover:opacity-100 transition-opacity"
+                              className="w-full h-full object-cover rounded-lg dark:opacity-80 group-hover:opacity-100 transition-opacity"
                             />
                           )}
                           <Button
                             type="button"
                             variant="destructive"
                             size="icon"
-                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute -top-1 -right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
                             onClick={() => removeMedia(index)}
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-2.5 w-2.5" />
                           </Button>
                         </div>
                       ))}
                     </div>
                     <label
                       htmlFor="media-upload"
-                      className="flex items-center justify-center cursor-pointer py-2 border-2 border-dashed rounded dark:border-zinc-800 dark:hover:bg-zinc-900 transition-colors"
+                      className="flex items-center justify-center cursor-pointer h-10 border border-dashed rounded-xl dark:border-zinc-800 dark:hover:bg-zinc-900 transition-colors"
                     >
-                      <Plus className="h-4 w-4 mr-2 dark:text-zinc-500" />
-                      <span className="text-sm dark:text-zinc-400">Add more</span>
+                      <Plus className="h-3.5 w-3.5 mr-2 dark:text-zinc-500" />
+                      <span className="text-xs dark:text-zinc-400 font-bold">Add more</span>
                       <input
                         id="media-upload"
                         type="file"
@@ -557,14 +552,11 @@ export default function ProductsManager({
                 ) : existingMediaUrls.length === 0 ? (
                   <label
                     htmlFor="media-upload"
-                    className="flex flex-col items-center justify-center cursor-pointer py-8 dark:hover:bg-zinc-900 transition-colors"
+                    className="flex flex-col items-center justify-center cursor-pointer py-6 dark:hover:bg-zinc-900 transition-colors"
                   >
-                    <Upload className="h-8 w-8 text-muted-foreground dark:text-zinc-600 mb-2" />
-                    <span className="text-sm text-muted-foreground dark:text-zinc-400">
-                      Click to upload images or videos
-                    </span>
-                    <span className="text-xs text-muted-foreground dark:text-zinc-600 mt-1">
-                      Max 50MB each, multiple files allowed
+                    <Upload className="h-6 w-6 text-muted-foreground dark:text-zinc-600 mb-2" />
+                    <span className="text-xs text-muted-foreground dark:text-zinc-400 font-medium">
+                      Select images or videos
                     </span>
                     <input
                       id="media-upload"
@@ -578,10 +570,10 @@ export default function ProductsManager({
                 ) : (
                   <label
                     htmlFor="media-upload"
-                    className="flex items-center justify-center cursor-pointer py-2 border-2 border-dashed rounded dark:border-zinc-800 dark:hover:bg-zinc-900 transition-colors"
+                    className="flex items-center justify-center cursor-pointer h-10 border border-dashed rounded-xl dark:border-zinc-800 dark:hover:bg-zinc-900 transition-colors"
                   >
-                    <Plus className="h-4 w-4 mr-2 dark:text-zinc-500" />
-                    <span className="text-sm dark:text-zinc-400">Add more media</span>
+                    <Plus className="h-3.5 w-3.5 mr-2 dark:text-zinc-500" />
+                    <span className="text-xs dark:text-zinc-400 font-bold">Add more media</span>
                     <input
                       id="media-upload"
                       type="file"
@@ -594,13 +586,9 @@ export default function ProductsManager({
                 )}
               </div>
             </div>
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white font-bold transition-all" disabled={uploading}>
+            <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all" disabled={uploading}>
               {uploading
-                ? uploadProgress > 0 && uploadProgress < 100
-                  ? `Uploading (${uploadProgress}%)...`
-                  : editingProduct
-                    ? "Updating..."
-                    : "Creating..."
+                ? `Uploading...`
                 : editingProduct
                   ? "Update Product"
                   : "Create Product"}
@@ -611,28 +599,28 @@ export default function ProductsManager({
       </Dialog>
 
       {products.length === 0 ? (
-        <Card className="shadow-soft dark:bg-zinc-900/40 dark:border-zinc-800">
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground dark:text-zinc-500 mb-4 font-medium transition-colors">
+        <Card className="shadow-soft dark:bg-zinc-900/40 dark:border-zinc-800 rounded-2xl">
+          <CardContent className="py-10 text-center">
+            <p className="text-sm text-muted-foreground dark:text-zinc-500 mb-4 font-medium transition-colors">
               You haven't added any products yet.
             </p>
             <Button 
               onClick={() => setDialogOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-white font-bold transition-all"
+              className="bg-primary hover:bg-primary/90 text-white font-bold h-10 px-6 rounded-xl transition-all"
             >
               Add Your First Product
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 transition-all duration-500">
           {products.map((product) => (
             <Card
               key={product.id}
-              className="shadow-soft hover:shadow-hover dark:bg-zinc-900/40 dark:border-zinc-800/50 backdrop-blur-sm transition-all group overflow-hidden"
+              className="shadow-soft hover:shadow-hover dark:bg-zinc-900/40 dark:border-zinc-800/50 backdrop-blur-sm transition-all group overflow-hidden rounded-2xl"
             >
               {product.media_urls && product.media_urls.length > 0 && (
-                <div className="aspect-video w-full overflow-hidden rounded-t-lg transition-all duration-500 group-hover:scale-105">
+                <div className="aspect-video w-full overflow-hidden transition-all duration-500 group-hover:scale-105">
                   <S3Media
                     src={product.media_urls[0]}
                     alt={product.name}
@@ -641,39 +629,39 @@ export default function ProductsManager({
                   />
                 </div>
               )}
-              <CardHeader>
+              <CardHeader className="p-5">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg dark:text-white transition-colors">{product.name}</CardTitle>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(product)}
-                      className="hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-white"
+                      className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-white"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-3.5 w-3.5" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="icon"
-                          className="hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-rose-400">
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-rose-400">
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="dark:bg-zinc-950 dark:border-zinc-800">
+                      <AlertDialogContent className="dark:bg-zinc-950 dark:border-zinc-800 rounded-2xl">
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="dark:text-white">Delete Product?</AlertDialogTitle>
-                          <AlertDialogDescription className="dark:text-zinc-500">
+                          <AlertDialogTitle className="text-lg dark:text-white">Delete Product?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-sm dark:text-zinc-500">
                             This will permanently delete{" "}
                             <strong className="dark:text-zinc-300">{product.name}</strong>. This cannot be
                             undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel className="dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400">Cancel</AlertDialogCancel>
+                          <AlertDialogCancel className="h-10 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 rounded-xl">Cancel</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleDelete(product.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="h-10 bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
                           >
                             Delete
                           </AlertDialogAction>
@@ -683,20 +671,20 @@ export default function ProductsManager({
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground dark:text-zinc-500 mb-6 font-medium line-clamp-2 transition-colors">
+              <CardContent className="p-5 pt-0">
+                <p className="text-[15px] text-muted-foreground dark:text-zinc-500 mb-5 font-medium line-clamp-2 transition-colors">
                   {product.description}
                 </p>
                 <div className="flex justify-between items-center">
                   <span className="text-xl font-black text-black dark:text-white transition-colors">
                     ₹{product.price}
                   </span>
-                  <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-secondary dark:bg-zinc-800 text-secondary-foreground dark:text-zinc-400 transition-all">
+                  <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-emerald-100/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/20 transition-all">
                     {product.type}
                   </span>
                 </div>
                 {product.media_urls && product.media_urls.length > 1 && (
-                  <p className="text-xs font-bold text-gray-500 dark:text-zinc-600 mt-4 transition-colors">
+                  <p className="text-[11px] font-black text-gray-400 dark:text-zinc-600 mt-4 transition-colors uppercase tracking-widest">
                     +{product.media_urls.length - 1} more media
                   </p>
                 )}

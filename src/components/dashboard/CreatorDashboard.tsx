@@ -53,10 +53,12 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
   });
   const [userId, setUserId] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
   const [verificationStatus, setVerificationStatus] = useState<string>("unverified");
   const [verificationNotes, setVerificationNotes] = useState<string | null>(null);
 
   useEffect(() => {
+    fetchProfile();
     fetchStats();
     fetchUserId();
     fetchVerificationStatus();
@@ -89,6 +91,13 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
   const fetchUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setUserId(user.id);
+  };
+
+  const fetchProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    if (data) setProfile(data);
   };
 
   const fetchVerificationStatus = async () => {
@@ -161,15 +170,20 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
       <CreatorSidebar activeTab={isSettingsOpen ? "profile" : activeTab} onTabChange={onTabChange} />
       
       <main className="flex-1 ml-16 transition-all duration-300">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-12 lg:py-16">
+        <div className="max-w-[1240px] mx-auto px-6 md:px-10 py-10 lg:py-12">
           {/* Header Section */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 px-2">
-            <div>
-              <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-4 text-black dark:text-white uppercase transition-colors">
-                {activeTab === "dashboard" ? "Dashboard" : activeTab === "profile" ? "Settings" : activeTab}
-              </h1>
-              <p className="text-gray-500 dark:text-zinc-500 text-lg font-medium leading-relaxed max-w-xl transition-colors">
-                {activeTab === "dashboard" ? "Welcome back! Here's what's happening today." : 
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-12 px-2">
+            <div className="flex-1 min-w-0">
+            <h1 className="text-3xl md:text-4xl font-black text-black dark:text-white tracking-tight transition-all duration-500 overflow-hidden text-ellipsis whitespace-nowrap">
+              {activeTab === "dashboard" ? `Welcome back, ${profile?.name || 'Creator'}` : 
+               activeTab === "courses" ? "Courses Manager" : 
+               activeTab === "products" ? "Products Store" : 
+               activeTab === "orders" ? "Sales & Orders" : 
+               activeTab === "earnings" ? "Revenue Analytics" : 
+               activeTab === "explore" ? "Creator Network" : "Settings"}
+            </h1>
+            <p className="text-base md:text-lg text-gray-500 dark:text-zinc-500 font-medium transition-colors mt-1">
+                {activeTab === "dashboard" ? "Here's what's happening today." : 
                  activeTab === "explore" ? "Connect with other creators and browse the marketplace." :
                  `Manage your ${activeTab} content and track performance.`}
               </p>
@@ -180,16 +194,16 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
               {activeTab === "dashboard" && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="h-14 px-8 rounded-[2rem] border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900 text-gray-700 dark:text-zinc-300 font-bold transition-all hover:scale-105 active:scale-95 shadow-sm">
-                      <Share2 className="mr-2 h-5 w-5" />
+                    <Button variant="outline" className="h-11 px-6 rounded-2xl border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900 text-gray-700 dark:text-zinc-300 font-bold transition-all hover:scale-105 active:scale-95 shadow-sm">
+                      <Share2 className="mr-2 h-4 w-4" />
                       Share Page
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 rounded-[2rem] p-5 shadow-2xl border-none bg-white dark:bg-zinc-950">
-                    <div className="space-y-5 text-black dark:text-white">
+                  <PopoverContent className="w-80 rounded-2xl p-5 shadow-2xl border-none bg-white dark:bg-zinc-950">
+                    <div className="space-y-4 text-black dark:text-white">
                       <div>
-                        <h3 className="text-lg font-black mb-1">Share Your Store</h3>
-                        <p className="text-sm text-gray-500 dark:text-zinc-500 font-medium leading-snug">
+                        <h3 className="text-base font-black mb-1">Share Your Store</h3>
+                        <p className="text-xs text-gray-500 dark:text-zinc-500 font-medium leading-snug">
                           Let people explore your unique creations and courses.
                         </p>
                       </div>
@@ -198,9 +212,9 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
                           type="text"
                           readOnly
                           value={`${window.location.origin}/creator/${userId}`}
-                          className="flex-1 px-4 py-3 text-xs border dark:border-zinc-800 rounded-2xl bg-gray-50 dark:bg-zinc-900 font-mono text-gray-600 dark:text-zinc-400 focus:outline-none"
+                          className="flex-1 px-3 py-2.5 text-[10px] border dark:border-zinc-800 rounded-xl bg-gray-50 dark:bg-zinc-900 font-mono text-gray-600 dark:text-zinc-400 focus:outline-none"
                         />
-                        <Button size="icon" onClick={handleCopyShareLink} className="rounded-2xl h-10 w-10 flex-shrink-0 bg-black dark:bg-primary hover:bg-gray-800 dark:hover:bg-primary/90">
+                        <Button size="icon" onClick={handleCopyShareLink} className="rounded-xl h-9 w-9 flex-shrink-0 bg-black dark:bg-primary hover:bg-gray-800 dark:hover:bg-primary/90">
                           {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                         </Button>
                       </div>
@@ -213,9 +227,9 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
               {showHeaderAddButton && (
                 <Button 
                   onClick={() => setShowAddModal(true)}
-                  className="h-14 px-8 rounded-[2rem] bg-primary hover:bg-primary/90 text-white font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20"
+                  className="h-11 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20"
                 >
-                  <Plus className="mr-2 h-5 w-5" />
+                  <Plus className="mr-2 h-4 w-4" />
                   {getAddButtonText()}
                 </Button>
               )}
@@ -224,22 +238,22 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
 
           {/* Stats Section - ONLY visible on Dashboard tab */}
           {activeTab === "dashboard" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20 px-2 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
-              <StatCard label="Active Courses" value={stats.totalCourses} icon={<BookOpen className="h-7 w-7 text-black dark:text-white" />} color="bg-indigo-50 dark:bg-zinc-900/40" borderColor="dark:border-indigo-500/10" />
-              <StatCard label="Total Revenue" value={`₹${stats.totalSales.toLocaleString()}`} icon={<TrendingUp className="h-7 w-7 text-black dark:text-white" />} color="bg-emerald-50 dark:bg-zinc-900/40" sub="Last 30 days" borderColor="dark:border-emerald-500/10" />
-              <StatCard label="Total Students" value={stats.totalLearners} icon={<Users className="h-7 w-7 text-black dark:text-white" />} color="bg-violet-50 dark:bg-zinc-900/40" borderColor="dark:border-violet-500/10" />
-              <StatCard label="Digital Products" value={stats.productsListed} icon={<Package className="h-7 w-7 text-black dark:text-white" />} color="bg-orange-50 dark:bg-zinc-900/40" borderColor="dark:border-orange-500/10" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 px-2 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
+              <StatCard label="Active Courses" value={stats.totalCourses} icon={<BookOpen className="h-5 w-5 text-black dark:text-white" />} color="bg-indigo-50 dark:bg-zinc-900/40" borderColor="dark:border-indigo-500/10" />
+              <StatCard label="Total Revenue" value={`₹${stats.totalSales.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5 text-black dark:text-white" />} color="bg-emerald-50 dark:bg-zinc-900/40" sub="Last 30 days" borderColor="dark:border-emerald-500/10" />
+              <StatCard label="Total Students" value={stats.totalLearners} icon={<Users className="h-5 w-5 text-black dark:text-white" />} color="bg-violet-50 dark:bg-zinc-900/40" borderColor="dark:border-violet-500/10" />
+              <StatCard label="Digital Products" value={stats.productsListed} icon={<Package className="h-5 w-5 text-black dark:text-white" />} color="bg-orange-50 dark:bg-zinc-900/40" borderColor="dark:border-orange-500/10" />
             </div>
           )}
 
           {/* Main Content Area */}
-          <div className="px-2 pb-24">
+          <div className="px-2 pb-20">
             <Tabs value={activeTab} className="w-full">
               <TabsContent value="dashboard" className="mt-0 outline-none">
-                <div className="bg-white dark:bg-zinc-900/40 rounded-[2.5rem] p-12 shadow-sm border border-gray-100 dark:border-zinc-800 flex flex-col items-center justify-center text-center backdrop-blur-sm">
-                  <LayoutDashboard className="h-20 w-20 text-indigo-600 dark:text-indigo-400 mb-6" />
-                  <h2 className="text-4xl font-black mb-4 text-black dark:text-white">Welcome to your Dashboard</h2>
-                  <p className="text-gray-500 dark:text-zinc-500 max-w-md font-medium leading-relaxed">Explore your courses, products, and earnings using the sidebar navigation. Your stats and share options are right above.</p>
+                <div className="bg-white dark:bg-zinc-900/40 rounded-3xl p-10 shadow-sm border border-gray-100 dark:border-zinc-800 flex flex-col items-center justify-center text-center backdrop-blur-sm">
+                  <LayoutDashboard className="h-16 w-16 text-indigo-600 dark:text-indigo-400 mb-5" />
+                  <h2 className="text-2xl font-black mb-3 text-black dark:text-white">Welcome to your Dashboard</h2>
+                  <p className="text-gray-500 dark:text-zinc-500 max-w-sm text-sm font-medium leading-relaxed">Explore your courses, products, and earnings using the sidebar navigation. Your stats and share options are right above.</p>
                 </div>
               </TabsContent>
               <TabsContent value="courses" className="mt-0 outline-none">
@@ -268,7 +282,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
 
       {/* Settings Modal - Reference Inspired */}
       <Dialog open={isSettingsOpen} onOpenChange={handleCloseSettings}>
-        <DialogContent className="max-w-[1000px] w-[95vw] h-[85vh] p-0 overflow-hidden border-none shadow-2xl rounded-[2.5rem] bg-transparent">
+        <DialogContent className="max-w-[1000px] w-[95vw] h-[85vh] p-0 overflow-hidden border-none shadow-2xl rounded-3xl bg-transparent">
           <CreatorSettings 
             verificationStatus={verificationStatus}
             verificationNotes={verificationNotes}
@@ -283,17 +297,17 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
 
 function StatCard({ label, value, icon, color, sub, borderColor }: { label: string; value: string | number; icon: React.ReactNode; color: string; sub?: string; borderColor?: string }) {
   return (
-    <Card className={cn("border-none shadow-none rounded-[2.5rem] bg-white dark:bg-zinc-900 hover:bg-gray-50/50 dark:hover:bg-zinc-800 transition-all p-1", borderColor)}>
-      <div className={cn("w-full h-full rounded-[2rem] p-8 flex flex-col justify-between group cursor-default transition-all duration-500 border border-transparent", color, borderColor && "dark:border-opacity-100")}>
-        <div className="flex justify-between items-start mb-6">
-          <div className="p-4 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm text-black dark:text-white group-hover:scale-110 transition-transform duration-500">
+    <Card className={cn("border-none shadow-none rounded-2xl bg-white dark:bg-zinc-900 hover:bg-gray-50/50 dark:hover:bg-zinc-800 transition-all p-1", borderColor)}>
+      <div className={cn("w-full h-full rounded-xl p-6 flex flex-col justify-between group cursor-default transition-all duration-500 border border-transparent", color, borderColor && "dark:border-opacity-100")}>
+        <div className="flex justify-between items-start mb-5">
+          <div className="p-3 bg-white dark:bg-zinc-800 rounded-xl shadow-sm text-black dark:text-white group-hover:scale-110 transition-transform duration-500">
             {icon}
           </div>
-          {sub && <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-500 bg-white/50 dark:bg-zinc-800/50 px-3 py-1 rounded-full">{sub}</span>}
+          {sub && <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-500 bg-white/50 dark:bg-zinc-800/50 px-2.5 py-1 rounded-full">{sub}</span>}
         </div>
         <div>
-          <p className="text-gray-500 dark:text-zinc-500 font-bold uppercase tracking-widest text-xs mb-2 px-1">{label}</p>
-          <p className="text-5xl font-black text-black dark:text-white tracking-tight leading-none group-hover:translate-x-1 transition-transform duration-500">{value}</p>
+          <p className="text-gray-500 dark:text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-1.5 px-1">{label}</p>
+          <p className="text-3xl font-black text-black dark:text-white tracking-tight leading-none group-hover:translate-x-1 transition-transform duration-500">{value}</p>
         </div>
       </div>
     </Card>

@@ -182,39 +182,38 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
   };
 
   if (loading) {
-    return <div className="text-center py-8 dark:text-zinc-500">Loading courses...</div>;
+    return <div className="text-center py-6 dark:text-zinc-500 text-sm">Loading courses...</div>;
   }
 
   return (
     <div>
-      {/* Redundant header and button moved to parent CreatorDashboard.tsx header area */}
       <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="max-w-2xl dark:bg-zinc-950 dark:border-zinc-800">
+        <DialogContent className="max-w-xl dark:bg-zinc-950 dark:border-zinc-800 rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="dark:text-white transition-colors">{editingCourse ? "Edit Course" : "Create New Course"}</DialogTitle>
-            <DialogDescription className="dark:text-zinc-500 transition-colors">
+            <DialogTitle className="text-xl dark:text-white transition-colors">{editingCourse ? "Edit Course" : "Create New Course"}</DialogTitle>
+            <DialogDescription className="text-sm dark:text-zinc-500 transition-colors">
               {editingCourse ? "Update the details for your course" : "Fill in the details for your new course"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title" className="dark:text-zinc-300">Course Title</Label>
+              <Label htmlFor="title" className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Course Title</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
-                className="dark:bg-zinc-900 dark:border-zinc-800"
+                className="h-11 dark:bg-zinc-900 dark:border-zinc-800 rounded-xl"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description" className="dark:text-zinc-300">Description</Label>
+              <Label htmlFor="description" className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={4}
-                className="dark:bg-zinc-900 dark:border-zinc-800"
+                rows={3}
+                className="dark:bg-zinc-900 dark:border-zinc-800 rounded-xl text-sm"
               />
             </div>
             <div className="space-y-4">
@@ -226,11 +225,11 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
                   onChange={(e) => setFormData({ ...formData, is_free: e.target.checked, price: e.target.checked ? "0" : formData.price })}
                   className="h-4 w-4 rounded border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-900"
                 />
-                <Label htmlFor="is_free" className="dark:text-zinc-300">Make this course free</Label>
+                <Label htmlFor="is_free" className="text-sm dark:text-zinc-300 font-medium">Make this course free</Label>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price" className="dark:text-zinc-300">Price (₹)</Label>
+                  <Label htmlFor="price" className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Price (₹)</Label>
                   <Input
                     id="price"
                     type="number"
@@ -239,24 +238,24 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     disabled={formData.is_free}
                     required={!formData.is_free}
-                    className="dark:bg-zinc-900 dark:border-zinc-800"
+                    className="h-11 dark:bg-zinc-900 dark:border-zinc-800 rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="dark:text-zinc-300">Category</Label>
+                  <Label htmlFor="category" className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Category</Label>
                   <Input
                     id="category"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="dark:bg-zinc-900 dark:border-zinc-800"
+                    className="h-11 dark:bg-zinc-900 dark:border-zinc-800 rounded-xl"
                   />
                 </div>
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="status" className="dark:text-zinc-300">Status</Label>
+              <Label htmlFor="status" className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Status</Label>
               <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger className="dark:bg-zinc-900 dark:border-zinc-800">
+                <SelectTrigger className="h-11 dark:bg-zinc-900 dark:border-zinc-800 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="dark:bg-zinc-950 dark:border-zinc-800">
@@ -265,7 +264,7 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white font-bold transition-all">
+            <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all">
               {editingCourse ? "Update Course" : "Create Course"}
             </Button>
           </form>
@@ -273,64 +272,64 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
       </Dialog>
 
       {courses.length === 0 ? (
-        <Card className="shadow-soft dark:bg-zinc-900/40 dark:border-zinc-800">
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground dark:text-zinc-500 mb-4 font-medium transition-colors">You haven't created any courses yet.</p>
+        <Card className="shadow-soft dark:bg-zinc-900/40 dark:border-zinc-800 rounded-2xl">
+          <CardContent className="py-10 text-center">
+            <p className="text-sm text-muted-foreground dark:text-zinc-500 mb-4 font-medium transition-colors">You haven't created any courses yet.</p>
             <Button 
               onClick={() => setDialogOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-white font-bold transition-all"
+              className="bg-primary hover:bg-primary/90 text-white font-bold h-10 px-6 rounded-xl transition-all"
             >
               Create Your First Course
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 transition-all duration-500">
           {courses.map((course) => (
-            <Card key={course.id} className="shadow-soft hover:shadow-hover dark:bg-zinc-900/40 dark:border-zinc-800/50 backdrop-blur-sm transition-all group overflow-hidden">
-              <CardHeader className="relative">
+            <Card key={course.id} className="shadow-soft hover:shadow-hover dark:bg-zinc-900/40 dark:border-zinc-800/50 backdrop-blur-sm transition-all group overflow-hidden rounded-2xl">
+              <CardHeader className="relative p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="dark:text-white transition-colors">{course.title}</CardTitle>
-                    <CardDescription className="mt-2 text-primary dark:text-primary font-bold transition-colors">{course.category}</CardDescription>
+                    <CardTitle className="text-xl dark:text-white transition-colors">{course.title}</CardTitle>
+                    <CardDescription className="mt-1 text-xs text-primary dark:text-primary font-bold transition-colors uppercase tracking-widest">{course.category}</CardDescription>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => navigate(`/course/${course.id}`)}
                       title="View Course & Comments"
-                      className="hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-white"
+                      className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-white"
                     >
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-3.5 w-3.5" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => navigate(`/course/${course.id}/lessons`)} 
-                      className="hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-white">
-                      <BookOpen className="h-4 w-4" />
+                      className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-white">
+                      <BookOpen className="h-3.5 w-3.5" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(course)}
-                      className="hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-white">
-                      <Edit className="h-4 w-4" />
+                      className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-white">
+                      <Edit className="h-3.5 w-3.5" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="icon"
-                          className="hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-rose-400">
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-rose-400">
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="dark:bg-zinc-950 dark:border-zinc-800">
+                      <AlertDialogContent className="dark:bg-zinc-950 dark:border-zinc-800 rounded-2xl">
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="dark:text-white">Delete Course?</AlertDialogTitle>
-                          <AlertDialogDescription className="dark:text-zinc-500">
+                          <AlertDialogTitle className="text-lg dark:text-white">Delete Course?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-sm dark:text-zinc-500">
                             This will permanently delete <strong className="dark:text-zinc-300">{course.title}</strong> and all its lessons. This cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel className="dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400">Cancel</AlertDialogCancel>
+                          <AlertDialogCancel className="h-10 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 rounded-xl">Cancel</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleDelete(course.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="h-10 bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
                           >
                             Delete
                           </AlertDialogAction>
@@ -340,30 +339,24 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground dark:text-zinc-500 mb-6 font-medium line-clamp-2 transition-colors">{course.description}</p>
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex gap-2 items-center">
-                    <span className="text-xl font-black text-black dark:text-white transition-colors">
-                      {course.is_free ? "FREE" : `₹${course.price}`}
-                    </span>
-                    {course.is_free && (
-                      <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 transition-colors">
-                        Free Access
-                      </span>
+              <CardContent className="p-6 pt-0">
+                <p className="text-base text-muted-foreground dark:text-zinc-500 mb-6 font-medium line-clamp-2 transition-colors">{course.description}</p>
+                <div className="flex justify-between items-center text-base border-t dark:border-zinc-800/50 pt-5">
+                  <span className="font-black text-black dark:text-white">
+                    {course.is_free ? (
+                      <span className="text-emerald-500">FREE</span>
+                    ) : (
+                      `₹${course.price}`
                     )}
-                  </div>
+                  </span>
                   <span className={cn(
-                    "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
-                    course.status === "published" 
-                      ? "bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400" 
-                      : "bg-muted dark:bg-zinc-800 text-muted-foreground dark:text-zinc-500"
+                    "px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest bg-secondary dark:bg-zinc-800 text-secondary-foreground dark:text-zinc-400 transition-all"
                   )}>
                     {course.status}
                   </span>
                 </div>
-                <div className="text-xs font-bold text-gray-500 dark:text-zinc-600 flex items-center gap-2 transition-colors">
-                  <Users className="h-3.5 w-3.5" />
+                <div className="text-[10px] font-bold text-gray-400 dark:text-zinc-600 flex items-center gap-2 transition-colors uppercase tracking-wider">
+                  <Users className="h-3 w-3" />
                   {courseLearners[course.id] || 0} learner{(courseLearners[course.id] || 0) !== 1 ? 's' : ''} enrolled
                 </div>
               </CardContent>

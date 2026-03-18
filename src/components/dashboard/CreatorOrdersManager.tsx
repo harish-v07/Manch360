@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 interface Order {
     id: string;
@@ -111,11 +112,11 @@ export default function CreatorOrdersManager() {
     };
 
     const shipmentStatusColors: Record<string, string> = {
-        pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
-        shipped: "bg-blue-100 text-blue-700 border-blue-200",
-        delivered: "bg-green-100 text-green-700 border-green-200",
-        failed: "bg-red-100 text-red-700 border-red-200",
-        cancelled: "bg-red-100 text-red-700 border-red-200",
+        pending: "bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800/50",
+        shipped: "bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/50",
+        delivered: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50",
+        failed: "bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/50",
+        cancelled: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700",
     };
 
     const cancelOrder = async (orderId: string) => {
@@ -142,7 +143,6 @@ export default function CreatorOrdersManager() {
                 throw new Error(data.error || "Failed to process refund");
             }
             
-            // Optimistic update — reflect immediately in UI
             setOrders(prev => prev.map(o =>
                 o.id === orderId
                     ? { ...o, shipment_status: "cancelled", status: "cancelled" }
@@ -154,6 +154,7 @@ export default function CreatorOrdersManager() {
             toast.error(err.message || "Failed to cancel order", { id: "cancel-order" });
         }
     };
+
     const handleCreateShipment = async (orderId: string) => {
         try {
             setShippingOrderId(orderId);
@@ -224,37 +225,39 @@ export default function CreatorOrdersManager() {
         }
     };
 
+    if (loading) {
+        return <div className="text-center py-6 dark:text-zinc-500 text-sm">Loading orders...</div>;
+    }
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-5">
             {!pickupRegistered && (
-                <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                    <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-amber-800 dark:text-amber-300">
-                        <p className="font-medium">Pickup address not registered</p>
-                        <p className="mt-1">
-                            Go to the <strong>Shipping</strong> tab to register your pickup address before you can ship physical product orders.
+                <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 transition-all">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
+                    <div className="text-xs text-amber-800 dark:text-amber-300">
+                        <p className="font-black uppercase tracking-widest">Pickup address missing</p>
+                        <p className="mt-1 font-medium opacity-80 leading-relaxed">
+                            Register your pickup address in **Settings &rsaquo; Shipping** to start fulfillment.
                         </p>
                     </div>
                 </div>
             )}
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Package className="h-5 w-5" />
-                        Product Orders
+            <Card className="shadow-soft dark:bg-zinc-900/40 dark:border-zinc-800 rounded-2xl overflow-hidden">
+                <CardHeader className="p-5">
+                    <CardTitle className="flex items-center gap-2 text-lg font-black dark:text-white">
+                        <Package className="h-4 w-4 text-primary" />
+                        Order History
                     </CardTitle>
-                    <CardDescription>
-                        Orders placed for your physical and digital products
+                    <CardDescription className="text-xs dark:text-zinc-500">
+                        Manage fulfillment and track your product sales
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    {loading ? (
-                        <p className="text-muted-foreground text-sm text-center py-8">Loading orders...</p>
-                    ) : orders.length === 0 ? (
-                        <div className="text-center py-12 text-muted-foreground">
-                            <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                            <p>No product orders yet</p>
+                <CardContent className="p-5 pt-0">
+                    {orders.length === 0 ? (
+                        <div className="text-center py-12 bg-gray-50/50 dark:bg-zinc-900/20 rounded-xl border border-dashed dark:border-zinc-800">
+                            <Package className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                            <p className="text-xs font-black dark:text-zinc-600 uppercase tracking-widest">No orders found</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -264,32 +267,44 @@ export default function CreatorOrdersManager() {
                                 const buyer = order.profiles as any;
 
                                 return (
-                                    <div key={order.id} className="border rounded-lg p-4 space-y-3">
+                                    <div key={order.id} className="border border-gray-100 dark:border-zinc-800/50 rounded-xl p-4 space-y-4 dark:bg-zinc-900/30 hover:border-primary/20 transition-all">
                                         <div className="flex items-start justify-between gap-4 flex-wrap">
-                                            <div>
-                                                <p className="font-semibold text-sm">{order.products?.name || "Product"}</p>
-                                                <p className="text-xs text-muted-foreground mt-0.5">
-                                                    Order #{order.id.substring(0, 8).toUpperCase()} &bull;{" "}
-                                                    {new Date(order.created_at).toLocaleDateString("en-IN", {
-                                                        day: "numeric",
-                                                        month: "short",
-                                                        year: "numeric",
-                                                    })}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground mt-0.5">
-                                                    Buyer: <span className="font-medium">{buyer?.name || "Unknown"}</span>
-                                                    {buyer?.email && <span> ({buyer.email})</span>}
+                                            <div className="space-y-1">
+                                                <p className="font-black text-lg dark:text-zinc-200">{order.products?.name || "Product"}</p>
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="text-sm font-black text-gray-400 dark:text-zinc-600 uppercase tracking-widest">#{order.id.substring(0, 8).toUpperCase()}</span>
+                                                    <span className="text-gray-300 dark:text-zinc-800">•</span>
+                                                    <span className="text-sm font-bold text-gray-400 dark:text-zinc-500">
+                                                        {new Date(order.created_at).toLocaleDateString("en-IN", {
+                                                            day: "numeric",
+                                                            month: "short",
+                                                            year: "numeric",
+                                                            hour: "2-digit",
+                                                            minute: "2-digit"
+                                                        })}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm font-medium text-gray-500 dark:text-zinc-500">
+                                                    Buyer: <span className="font-bold dark:text-zinc-400">{buyer?.name || "Unknown"}</span>
+                                                    {buyer?.email && <span className="opacity-60 ml-3 whitespace-nowrap">({buyer.email})</span>}
                                                 </p>
                                             </div>
                                             <div className="flex flex-col items-end gap-2">
-                                                <span className="font-bold text-primary">₹{Number(order.amount).toFixed(2)}</span>
-                                                <div className="flex gap-2 flex-wrap justify-end">
-                                                    <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${order.status === "completed" ? "bg-green-100 text-green-700 border-green-200" : "bg-yellow-100 text-yellow-700 border-yellow-200"
-                                                        }`}>
+                                                <span className="font-black text-lg text-primary">₹{Number(order.amount).toLocaleString()}</span>
+                                                <div className="flex gap-1.5 flex-wrap justify-end">
+                                                    <span className={cn(
+                                                        "text-[9px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-widest border transition-all",
+                                                        order.status === "completed" 
+                                                            ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/30" 
+                                                            : "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/30"
+                                                    )}>
                                                         {order.status}
                                                     </span>
                                                     {order.products?.type === "physical" && (
-                                                        <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${shipmentStatusColors[order.shipment_status] || ""}`}>
+                                                        <span className={cn(
+                                                            "text-[9px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-widest border shadow-sm transition-all",
+                                                            shipmentStatusColors[order.shipment_status] || "bg-gray-100 dark:bg-zinc-800"
+                                                        )}>
                                                             {order.shipment_status}
                                                         </span>
                                                     )}
@@ -299,33 +314,35 @@ export default function CreatorOrdersManager() {
 
                                         {/* Delivery address */}
                                         {addr && (
-                                            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
-                                                <MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-primary" />
-                                                <span>
-                                                    {addr.fullName} · {addr.phone}<br />
-                                                    {addr.addressLine}, {addr.city}, {addr.state} – {addr.pincode}
+                                            <div className="flex items-start gap-3 text-xs text-gray-500 dark:text-zinc-500 bg-gray-50 dark:bg-zinc-950/50 rounded-xl p-3 border border-gray-100 dark:border-zinc-800/50 group">
+                                                <MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-primary group-hover:scale-110 transition-transform" />
+                                                <span className="font-medium leading-relaxed">
+                                                    <span className="font-bold dark:text-zinc-400">{addr.fullName}</span> &bull; {addr.phone}<br />
+                                                    {addr.addressLine}, {addr.city}, {addr.state} – <span className="font-mono">{addr.pincode}</span>
                                                 </span>
                                             </div>
                                         )}
 
                                         {/* Shipment info */}
                                         {order.products?.type === "physical" && shipment && (
-                                            <div className="flex items-center justify-between bg-muted/30 rounded p-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Truck className="h-4 w-4 text-primary" />
+                                            <div className="flex items-center justify-between bg-primary/5 dark:bg-primary/5 rounded-xl p-3 border border-primary/10">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-white dark:bg-zinc-900 rounded-lg shadow-sm">
+                                                        <Truck className="h-3.5 w-3.5 text-primary" />
+                                                    </div>
                                                     <div>
-                                                        <p className="text-xs font-medium">{shipment.courier_name || "Courier"}</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest dark:text-zinc-300">{shipment.courier_name || "Assigned Courier"}</p>
                                                         {shipment.awb_code && (
-                                                            <p className="text-xs text-muted-foreground font-mono">AWB: {shipment.awb_code}</p>
+                                                            <p className="text-[9px] text-muted-foreground font-mono mt-0.5">AWB: {shipment.awb_code}</p>
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-2">
+                                                <div className="flex gap-1.5">
                                                     {shipment.awb_code ? (
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="gap-1 text-xs h-7"
+                                                            className="gap-1.5 text-[10px] h-8 px-3 rounded-lg font-black uppercase tracking-wider"
                                                             onClick={() => window.open(`https://shiprocket.co/tracking/${shipment.awb_code}`, "_blank")}
                                                         >
                                                             <ExternalLink className="h-3 w-3" />
@@ -334,12 +351,12 @@ export default function CreatorOrdersManager() {
                                                     ) : order.shipment_status !== "cancelled" && (
                                                         <Button
                                                             size="sm"
-                                                            className="gap-1 text-xs h-7 bg-green-600 text-white hover:bg-green-700"
+                                                            className="gap-1.5 text-[10px] h-8 px-3 rounded-lg font-black uppercase tracking-wider bg-primary text-white hover:bg-primary/90"
                                                             onClick={() => handleReadyToShip(order.id)}
                                                             disabled={shippingOrderId === order.id}
                                                         >
                                                             <Truck className="h-3 w-3" />
-                                                            {shippingOrderId === order.id ? "Processing..." : "Ready to Ship"}
+                                                            {shippingOrderId === order.id ? "Working..." : "Ready to Ship"}
                                                         </Button>
                                                     )}
                                                     
@@ -348,26 +365,26 @@ export default function CreatorOrdersManager() {
                                                             <AlertDialogTrigger asChild>
                                                                 <Button
                                                                     size="sm"
-                                                                    variant="outline"
-                                                                    className="gap-1 text-xs h-7 text-red-600 border-red-300 hover:bg-red-50"
+                                                                    variant="ghost"
+                                                                    className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-[10px] font-bold h-8"
                                                                 >
-                                                                    Cancel Order
+                                                                    Cancel
                                                                 </Button>
                                                             </AlertDialogTrigger>
-                                                            <AlertDialogContent>
+                                                            <AlertDialogContent className="rounded-2xl dark:bg-zinc-950 dark:border-zinc-800">
                                                                 <AlertDialogHeader>
-                                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        This action will immediately refund the buyer via Razorpay and cancel the shipment in Shiprocket if it has been created. This action cannot be undone.
+                                                                    <AlertDialogTitle className="dark:text-white">Refund & Cancel?</AlertDialogTitle>
+                                                                    <AlertDialogDescription className="text-xs dark:text-zinc-500">
+                                                                        This will immediately refund the buyer and cancel any pending shipments. This cannot be undone.
                                                                     </AlertDialogDescription>
                                                                 </AlertDialogHeader>
                                                                 <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Keep Order</AlertDialogCancel>
+                                                                    <AlertDialogCancel className="h-10 rounded-xl dark:bg-zinc-900 border-none dark:text-zinc-400">Keep Order</AlertDialogCancel>
                                                                     <AlertDialogAction
                                                                         onClick={() => cancelOrder(order.id)}
-                                                                        className="bg-red-600 hover:bg-red-700 text-white"
+                                                                        className="h-10 rounded-xl bg-destructive hover:bg-destructive/90 text-white"
                                                                     >
-                                                                        Yes, Cancel Order
+                                                                        Confirm Refund
                                                                     </AlertDialogAction>
                                                                 </AlertDialogFooter>
                                                             </AlertDialogContent>
@@ -377,50 +394,48 @@ export default function CreatorOrdersManager() {
                                             </div>
                                         )}
 
-                                        {/* Create Shipment / Cancel button for physical orders where shipment is completely missing */}
+                                        {/* Create Shipment button for physical orders where shipment is completely missing */}
                                         {order.products?.type === "physical" && !shipment && order.shipment_status !== "cancelled" && (
-                                            <div className="flex justify-end gap-2">
+                                            <div className="flex justify-end gap-2 pt-2">
                                                 <Button
                                                     size="sm"
-                                                    className="gap-1 text-xs h-7 bg-primary text-primary-foreground hover:bg-primary/90"
+                                                    className="gap-2 text-[10px] h-9 px-4 rounded-xl font-black uppercase tracking-widest bg-primary text-white hover:bg-primary/90"
                                                     onClick={() => handleCreateShipment(order.id)}
                                                     disabled={!pickupRegistered || shippingOrderId === order.id}
                                                 >
-                                                    <Truck className="h-3 w-3" />
-                                                    {shippingOrderId === order.id ? "Creating..." : "Create Shipment"}
+                                                    <Truck className="h-3.5 w-3.5" />
+                                                    {shippingOrderId === order.id ? "Initializing..." : "Create Shipment"}
                                                 </Button>
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="gap-1 text-xs h-7 text-red-600 border-red-300 hover:bg-red-50"
+                                                            className="h-9 px-4 text-rose-500 border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[10px] font-black uppercase tracking-widest rounded-xl"
                                                         >
                                                             Cancel Order
                                                         </Button>
                                                     </AlertDialogTrigger>
-                                                    <AlertDialogContent>
+                                                    <AlertDialogContent className="rounded-2xl dark:bg-zinc-950 dark:border-zinc-800">
                                                         <AlertDialogHeader>
-                                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                This action will immediately refund the buyer via Razorpay and cancel the order. This action cannot be undone.
+                                                            <AlertDialogTitle className="dark:text-white">Cancel Order?</AlertDialogTitle>
+                                                            <AlertDialogDescription className="text-xs dark:text-zinc-500">
+                                                                Immediate refund will be processed via Razorpay.
                                                             </AlertDialogDescription>
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>
-                                                            <AlertDialogCancel>Keep Order</AlertDialogCancel>
+                                                            <AlertDialogCancel className="h-10 rounded-xl dark:bg-zinc-900 border-none">Oops, Keep it</AlertDialogCancel>
                                                             <AlertDialogAction
                                                                 onClick={() => cancelOrder(order.id)}
-                                                                className="bg-red-600 hover:bg-red-700 text-white"
+                                                                className="h-10 rounded-xl bg-destructive text-white"
                                                             >
-                                                                Yes, Cancel Order
+                                                                Refund & Cancel
                                                             </AlertDialogAction>
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>
                                                 </AlertDialog>
                                             </div>
                                         )}
-
-
                                     </div>
                                 );
                             })}

@@ -1,29 +1,30 @@
 import { cn } from "@/lib/utils";
 import { 
+  LayoutDashboard, 
   BookOpen, 
   Package, 
   IndianRupee, 
-  ShoppingBag, 
   Settings, 
   LogOut,
-  LayoutDashboard,
-  Compass
+  Compass,
+  ShoppingBag
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface CreatorSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
 }
 
-export const CreatorSidebar = ({ activeTab, onTabChange }: CreatorSidebarProps) => {
+export function CreatorSidebar({ activeTab, onTabChange }: CreatorSidebarProps) {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/");
+    toast.success("Logged out successfully");
+    navigate("/auth");
   };
 
   const navItems = [
@@ -36,53 +37,64 @@ export const CreatorSidebar = ({ activeTab, onTabChange }: CreatorSidebarProps) 
   ];
 
   return (
-    <div className="fixed left-0 top-0 h-screen w-[64px] flex flex-col items-center py-6 bg-white dark:bg-zinc-950 border-r border-gray-100 dark:border-zinc-900 z-50 transition-all duration-300">
-      {/* Brand Logo */}
-      <Link to="/" className="mb-10 text-center">
-        <div className="text-2xl font-black tracking-tighter text-black dark:text-white">M</div>
-      </Link>
+    <aside className="fixed left-0 top-0 h-screen w-16 flex flex-col bg-white dark:bg-zinc-950 border-r border-gray-100 dark:border-zinc-900 transition-all duration-500 z-50">
+      {/* Branding */}
+      <div className="h-16 flex items-center justify-center">
+        <span className="text-2xl font-black text-black dark:text-white tracking-tighter">M</span>
+      </div>
 
-      {/* Navigation Icons - Small Size */}
-      <div className="flex-1 flex flex-col gap-5 w-full items-center">
+      {/* Navigation */}
+      <nav className="flex-1 flex flex-col items-center gap-4 pt-6">
         {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onTabChange(item.id)}
             className={cn(
-              "relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300",
-              activeTab === item.id 
-                ? "bg-black text-white shadow-lg shadow-black/20 dark:bg-primary dark:shadow-primary/20" 
-                : "text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-900"
+              "w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 relative group",
+              activeTab === item.id
+                ? "bg-black dark:bg-primary text-white shadow-lg shadow-primary/20 scale-110"
+                : "text-gray-400 dark:text-zinc-600 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-900"
             )}
             title={item.label}
           >
-            <item.icon className={cn("h-5 w-5", activeTab === item.id ? "stroke-[2.5px]" : "stroke-[2px]")} />
+            <item.icon className={cn("h-5 w-5", activeTab === item.id ? "h-6 w-6" : "h-5 w-5")} />
+            
+            {/* Tooltip emulation */}
+            <span className="absolute left-16 px-2 py-1 rounded bg-black text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[100]">
+              {item.label}
+            </span>
           </button>
         ))}
-      </div>
+      </nav>
 
       {/* Bottom Actions */}
-      <div className="mt-auto flex flex-col gap-5 items-center pb-6">
+      <div className="flex flex-col items-center gap-4 pb-6">
         <button
           onClick={() => onTabChange("profile")}
           className={cn(
-            "flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300",
-            activeTab === "profile" 
-              ? "bg-black text-white shadow-lg shadow-black/20 dark:bg-primary dark:shadow-primary/20" 
-              : "text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-900"
+            "w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 relative group",
+            activeTab === "profile"
+              ? "bg-black dark:bg-primary text-white shadow-lg"
+              : "text-gray-400 dark:text-zinc-600 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-900"
           )}
           title="Settings"
         >
           <Settings className="h-5 w-5" />
+          <span className="absolute left-16 px-2 py-1 rounded bg-black text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[100]">
+            Settings
+          </span>
         </button>
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all duration-300"
+          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 text-gray-400 dark:text-zinc-600 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 relative group"
           title="Logout"
         >
           <LogOut className="h-5 w-5" />
+          <span className="absolute left-16 px-2 py-1 rounded bg-black text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[100]">
+            Logout
+          </span>
         </button>
       </div>
-    </div>
+    </aside>
   );
-};
+}

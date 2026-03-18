@@ -31,6 +31,7 @@ import {
 import CreatorOrdersManager from "./CreatorOrdersManager";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import CoursePreviewInline from "./CoursePreviewInline";
+import CreatorStorefrontInline from "./CreatorStorefrontInline";
 
 interface CreatorDashboardProps {
   activeTab?: string;
@@ -46,6 +47,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [previewCourseId, setPreviewCourseId] = useState<string | null>(null);
+  const [previewCreatorId, setPreviewCreatorId] = useState<string | null>(null);
 
   const [stats, setStats] = useState({
     totalCourses: 0,
@@ -83,6 +85,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
       setIsSettingsOpen(false);
       setShowAddModal(false); // Reset add modal state when switching tabs
       setPreviewCourseId(null); // Clear course preview when switching tabs
+      setPreviewCreatorId(null); // Clear storefront preview when switching tabs
     }
   }, [activeTab]);
 
@@ -179,6 +182,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
             <div className="flex-1 min-w-0">
              <h1 className="text-3xl md:text-4xl font-black text-black dark:text-white tracking-tight transition-all duration-500 overflow-hidden text-ellipsis whitespace-nowrap">
               {previewCourseId ? "Course Preview" :
+               previewCreatorId ? "Storefront Preview" :
                activeTab === "dashboard" ? `Welcome back, ${profile?.name || 'Creator'}` : 
                activeTab === "courses" ? "Courses Manager" : 
                activeTab === "products" ? "Products Store" : 
@@ -188,6 +192,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
             </h1>
             <p className="text-base md:text-lg text-gray-500 dark:text-zinc-500 font-medium transition-colors mt-1">
                 {previewCourseId ? "Review your course content as it appears to learners." :
+                 previewCreatorId ? "Preview how this storefront appears to the community." :
                  activeTab === "dashboard" ? "Here's what's happening today." : 
                  activeTab === "explore" ? "Connect with other creators and browse the marketplace." :
                  `Manage your ${activeTab} content and track performance.`}
@@ -196,7 +201,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
             
             <div className="flex items-center gap-3">
               {/* Hide these buttons in preview mode */}
-              {!previewCourseId && (
+              {!previewCourseId && !previewCreatorId && (
                 <>
                   {/* Only show Share button on Dashboard tab */}
                   {activeTab === "dashboard" && (
@@ -250,9 +255,9 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
           {activeTab === "dashboard" && !previewCourseId && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 px-2 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
               <StatCard label="Active Courses" value={stats.totalCourses} icon={<BookOpen className="h-5 w-5 text-black dark:text-white" />} color="bg-indigo-50 dark:bg-zinc-900/40" borderColor="dark:border-indigo-500/10" />
-              <StatCard label="Total Revenue" value={`₹${stats.totalSales.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5 text-black dark:text-white" />} color="bg-emerald-50 dark:bg-zinc-900/40" sub="Last 30 days" borderColor="dark:border-emerald-500/10" />
+              <StatCard label="Total Revenue" value={`₹${stats.totalSales.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5 text-black dark:text-white" />} color="bg-emerald-50 dark:bg-zinc-900/40" borderColor="dark:border-emerald-500/10" />
               <StatCard label="Total Students" value={stats.totalLearners} icon={<Users className="h-5 w-5 text-black dark:text-white" />} color="bg-violet-50 dark:bg-zinc-900/40" borderColor="dark:border-violet-500/10" />
-              <StatCard label="Digital Products" value={stats.productsListed} icon={<Package className="h-5 w-5 text-black dark:text-white" />} color="bg-orange-50 dark:bg-zinc-900/40" borderColor="dark:border-orange-500/10" />
+              <StatCard label="Products" value={stats.productsListed} icon={<Package className="h-5 w-5 text-black dark:text-white" />} color="bg-orange-50 dark:bg-zinc-900/40" borderColor="dark:border-orange-500/10" />
             </div>
           )}
 
@@ -291,7 +296,16 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
               <TabsContent value="orders" className="mt-0 outline-none"><CreatorOrdersManager /></TabsContent>
               <TabsContent value="earnings" className="mt-0 outline-none"><EarningsManager /></TabsContent>
               <TabsContent value="explore" className="mt-0 outline-none">
-                <CreatorExplore />
+                {previewCreatorId ? (
+                  <CreatorStorefrontInline 
+                    creatorId={previewCreatorId} 
+                    onBack={() => setPreviewCreatorId(null)} 
+                  />
+                ) : (
+                  <CreatorExplore 
+                    onViewStorefront={(id) => setPreviewCreatorId(id)}
+                  />
+                )}
               </TabsContent>
             </Tabs>
           </div>

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { User, Truck, CreditCard, ShieldCheck, Clock, ShieldAlert, Sparkles, Store } from "lucide-react";
+import { User, Truck, CreditCard, ShieldCheck, Clock, ShieldAlert, Sparkles, Store, Moon, Sun } from "lucide-react";
 import ProfileEditor from "./ProfileEditor";
+import { useTheme } from "next-themes";
 import PickupAddressSettings from "./PickupAddressSettings";
 import CreatorPaymentSettings from "./CreatorPaymentSettings";
 import VerificationForm from "./VerificationForm";
@@ -29,7 +30,10 @@ export default function CreatorSettings({
     { id: "storefront", label: "Storefront", icon: Store },
     { id: "shipping", label: "Shipping", icon: Truck },
     { id: "bank", label: "Bank Details", icon: CreditCard },
+    { id: "appearance", label: "Appearance", icon: Moon },
   ];
+
+  const { theme, setTheme } = useTheme();
 
   const renderContent = () => {
     switch (activeSubTab) {
@@ -121,6 +125,69 @@ export default function CreatorSettings({
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
             <h3 className="text-xl font-black mb-6 dark:text-white">Bank Details</h3>
             <CreatorPaymentSettings />
+          </div>
+        );
+      case "appearance":
+        return (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div>
+              <h3 className="text-xl font-black mb-1 dark:text-white transition-colors">Appearance</h3>
+              <p className="text-sm text-gray-400 dark:text-zinc-500 font-medium transition-colors">Customize how your dashboard looks and feels.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button 
+                onClick={() => setTheme("light")}
+                className={cn(
+                  "p-6 rounded-3xl border-2 transition-all duration-300 text-left group",
+                  theme === "light" 
+                    ? "border-primary bg-primary/5 shadow-lg shadow-primary/10" 
+                    : "border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 hover:border-gray-200 dark:hover:border-zinc-700"
+                )}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center",
+                    theme === "light" ? "bg-primary text-white" : "bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500"
+                  )}>
+                    <Sun className="h-6 w-6" />
+                  </div>
+                  {theme === "light" && (
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                    </div>
+                  )}
+                </div>
+                <h4 className="font-black text-gray-900 dark:text-white transition-colors">Light Mode</h4>
+                <p className="text-[11px] text-gray-500 dark:text-zinc-500 font-semibold uppercase tracking-wider mt-1">Clean & Bright</p>
+              </button>
+
+              <button 
+                onClick={() => setTheme("dark")}
+                className={cn(
+                  "p-6 rounded-3xl border-2 transition-all duration-300 text-left group",
+                  theme === "dark" 
+                    ? "border-primary bg-primary/5 shadow-lg shadow-primary/10" 
+                    : "border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 hover:border-gray-200 dark:hover:border-zinc-700"
+                )}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center",
+                    theme === "dark" ? "bg-primary text-white" : "bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500"
+                  )}>
+                    <Moon className="h-6 w-6" />
+                  </div>
+                  {theme === "dark" && (
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                    </div>
+                  )}
+                </div>
+                <h4 className="font-black text-gray-900 dark:text-white transition-colors">Dark Mode</h4>
+                <p className="text-[11px] text-gray-500 dark:text-zinc-500 font-semibold uppercase tracking-wider mt-1">Sleek & Visual</p>
+              </button>
+            </div>
           </div>
         );
       default:

@@ -7,7 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, ShieldCheck, ExternalLink } from "lucide-react";
 import { S3Media } from "@/components/S3Media";
 
-export default function CreatorExplore() {
+interface CreatorExploreProps {
+  onViewStorefront?: (creatorId: string) => void;
+}
+
+export default function CreatorExplore({ onViewStorefront }: CreatorExploreProps) {
   const [creators, setCreators] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -105,12 +109,14 @@ export default function CreatorExplore() {
                 <p className="text-sm text-gray-500 dark:text-zinc-500 mb-6 line-clamp-2 font-medium min-h-[40px]">
                   {creator.bio || "Crafting digital experiences and sharing knowledge."}
                 </p>
-                <Link to={`/creator/${creator.id}`}>
-                  <Button variant="outline" className="w-full h-11 rounded-xl border-gray-200 dark:border-zinc-800 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-800 transition-all font-bold gap-2">
-                    View Storefront
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </Button>
-                </Link>
+                <Button 
+                  variant="outline" 
+                  onClick={() => onViewStorefront ? onViewStorefront(creator.id) : window.location.href = `/creator/${creator.id}`}
+                  className="w-full h-11 rounded-xl border-gray-200 dark:border-zinc-800 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-800 transition-all font-bold gap-2"
+                >
+                  View Storefront
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Button>
               </CardContent>
             </Card>
           ))}

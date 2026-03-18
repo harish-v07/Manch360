@@ -167,7 +167,7 @@ export default function CreatorStorefrontInline({ creatorId, onBack }: CreatorSt
                   <CardHeader className="pb-4">
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/5 dark:bg-primary/10 px-3 py-1 rounded-full">{course.category}</span>
-                      <div className="flex items-center gap-1.5 text-xs font-black dark:text-white">
+                      <div className="flex items-center gap-1.5 text-lg font-black dark:text-white">
                         {course.is_free ? (
                           <span className="text-emerald-500">FREE</span>
                         ) : (
@@ -214,7 +214,7 @@ export default function CreatorStorefrontInline({ creatorId, onBack }: CreatorSt
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base font-bold truncate">{product.name}</CardTitle>
                     <div className="flex justify-between items-center mt-1">
-                      <span className="text-sm font-black text-primary">₹{product.price}</span>
+                      <span className="text-lg font-black text-primary">₹{product.price}</span>
                       <span className="text-[10px] uppercase font-black tracking-widest opacity-50">{product.type}</span>
                     </div>
                   </CardHeader>

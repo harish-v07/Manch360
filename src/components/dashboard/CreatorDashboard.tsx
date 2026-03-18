@@ -207,9 +207,9 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
                   {activeTab === "dashboard" && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="h-11 px-6 rounded-2xl border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900 text-gray-700 dark:text-zinc-300 font-bold transition-all hover:scale-105 active:scale-95 shadow-sm">
-                      <Share2 className="mr-2 h-4 w-4" />
-                      Share Page
+                    <Button variant="outline" className="h-11 px-6 rounded-2xl border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900 !text-black dark:!text-zinc-300 font-bold transition-all hover:scale-105 active:scale-95 shadow-sm">
+                      <Share2 className="mr-2 h-4 w-4 !text-black dark:!text-zinc-300" />
+                      <span className="!text-black dark:!text-zinc-300">Share Page</span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80 rounded-2xl p-5 shadow-2xl border-none bg-white dark:bg-zinc-950">

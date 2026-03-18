@@ -7,13 +7,13 @@ import CreatorDashboard from "@/components/dashboard/CreatorDashboard";
 import LearnerDashboard from "@/components/dashboard/LearnerDashboard";
 import { useSessionMonitor } from "@/hooks/useSessionMonitor";
 
-
 export default function Dashboard() {
   useSessionMonitor();
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("courses");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -70,11 +70,19 @@ export default function Dashboard() {
     );
   }
 
+  if (userRole === "creator") {
+    return (
+      <div className="min-h-screen bg-background flex overflow-hidden">
+        <CreatorDashboard activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <Navbar />
       <div className="pt-20">
-        {userRole === "creator" ? <CreatorDashboard /> : <LearnerDashboard />}
+        <LearnerDashboard />
       </div>
     </div>
   );

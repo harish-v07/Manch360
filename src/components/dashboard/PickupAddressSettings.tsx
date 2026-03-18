@@ -94,96 +94,102 @@ export default function PickupAddressSettings() {
     };
 
     return (
-        <Card>
+        <Card className="shadow-soft dark:bg-zinc-900/40 dark:border-zinc-800 transition-colors">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Truck className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 dark:text-white transition-colors text-xl font-black">
+                    <Truck className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                     Shipping Pickup Address
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="dark:text-zinc-500 transition-colors">
                     Your address from where Shiprocket will pick up physical product orders.
                     {registered && (
-                        <span className="ml-2 inline-flex items-center gap-1 text-green-600 font-medium">
-                            <CheckCircle2 className="h-4 w-4" /> Registered
+                        <span className="ml-2 inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-[10px]">
+                            <CheckCircle2 className="h-3 w-3" /> Registered
                         </span>
                     )}
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
                 {!registered && (
-                    <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                        <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                        <div className="text-sm text-amber-800 dark:text-amber-300">
-                            <p className="font-medium">Pickup address not registered</p>
-                            <p className="mt-1">You need to register a pickup address to enable shipping for your physical products.</p>
+                    <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/20 rounded-2xl p-6 transition-colors">
+                        <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-amber-800 dark:text-amber-200">
+                            <p className="font-bold mb-1">Pickup address not registered</p>
+                            <p className="opacity-80">You need to register a pickup address to enable shipping for your physical products.</p>
                         </div>
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="sm:col-span-2 space-y-2">
-                        <Label htmlFor="pickup-contact-name">Contact Name *</Label>
+                        <Label htmlFor="pickup-contact-name" className="dark:text-zinc-300">Contact Name *</Label>
                         <Input
                             id="pickup-contact-name"
                             placeholder="Full name for pickup contact"
                             value={form.contactName}
                             onChange={(e) => setForm({ ...form, contactName: e.target.value })}
+                            className="dark:bg-zinc-950 dark:border-zinc-800 transition-colors"
                         />
                     </div>
 
                     <div className="sm:col-span-2 space-y-2">
-                        <Label htmlFor="pickup-phone">Phone Number *</Label>
+                        <Label htmlFor="pickup-phone" className="dark:text-zinc-300">Phone Number *</Label>
                         <Input
                             id="pickup-phone"
                             placeholder="10-digit mobile number"
                             value={form.phone}
                             onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
                             maxLength={10}
+                            className="dark:bg-zinc-950 dark:border-zinc-800 transition-colors"
                         />
                     </div>
 
                     <div className="sm:col-span-2 space-y-2">
-                        <Label htmlFor="pickup-address">Pickup Address *</Label>
+                        <Label htmlFor="pickup-address" className="dark:text-zinc-300">Pickup Address *</Label>
                         <Textarea
                             id="pickup-address"
                             placeholder="e.g. Flat 4, Green Apartments, MG Road"
                             value={form.address}
                             onChange={(e) => setForm({ ...form, address: e.target.value })}
-                            rows={2}
+                            rows={3}
+                            className="dark:bg-zinc-950 dark:border-zinc-800 transition-colors"
                         />
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] text-muted-foreground dark:text-zinc-500 font-medium transition-colors">
                             ⚠️ Must start with House No. / Flat No. / Road No. (e.g. "Flat 4, Building Name, Street")
                         </p>
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="pickup-city">City *</Label>
+                        <Label htmlFor="pickup-city" className="dark:text-zinc-300">City *</Label>
                         <Input
                             id="pickup-city"
                             placeholder="City"
                             value={form.city}
                             onChange={(e) => setForm({ ...form, city: e.target.value })}
+                            className="dark:bg-zinc-950 dark:border-zinc-800 transition-colors"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="pickup-state">State *</Label>
+                        <Label htmlFor="pickup-state" className="dark:text-zinc-300">State *</Label>
                         <Input
                             id="pickup-state"
                             placeholder="State"
                             value={form.state}
                             onChange={(e) => setForm({ ...form, state: e.target.value })}
+                            className="dark:bg-zinc-950 dark:border-zinc-800 transition-colors"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="pickup-pincode">Pincode *</Label>
+                        <Label htmlFor="pickup-pincode" className="dark:text-zinc-300">Pincode *</Label>
                         <Input
                             id="pickup-pincode"
                             placeholder="6-digit pincode"
                             value={form.pincode}
                             onChange={(e) => setForm({ ...form, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) })}
                             maxLength={6}
+                            className="dark:bg-zinc-950 dark:border-zinc-800 transition-colors"
                         />
                     </div>
                 </div>
@@ -191,15 +197,15 @@ export default function PickupAddressSettings() {
                 <Button
                     onClick={handleSave}
                     disabled={loading}
-                    className="w-full gap-2"
+                    className="w-full h-12 gap-2 bg-primary hover:bg-primary/90 text-white font-bold transition-all mt-4"
                 >
                     <MapPin className="h-4 w-4" />
                     {loading ? "Registering..." : registered ? "Update Pickup Address" : "Register Pickup Address"}
                 </Button>
 
                 {registered && (
-                    <p className="text-xs text-muted-foreground text-center">
-                        ✅ Shiprocket will use this address to pick up your physical product orders.
+                    <p className="text-[10px] text-muted-foreground dark:text-zinc-500 text-center font-bold uppercase tracking-wider transition-colors">
+                        ✅ Shiprocket will use this address for pick ups
                     </p>
                 )}
             </CardContent>

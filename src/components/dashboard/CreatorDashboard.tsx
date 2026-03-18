@@ -1,26 +1,50 @@
 import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Package, Store, IndianRupee, Share2, Copy, Check, ShieldCheck, ShieldAlert, Clock, Sparkles } from "lucide-react";
+import { 
+  BookOpen, 
+  Package, 
+  IndianRupee, 
+  Share2, 
+  Copy, 
+  Check, 
+  TrendingUp,
+  Users,
+  LayoutDashboard,
+  Plus
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CoursesManager from "./CoursesManager";
 import ProductsManager from "./ProductsManager";
-import StorefrontEditor from "./StorefrontEditor";
-import ProfileEditor from "./ProfileEditor";
 import EarningsManager from "./EarningsManager";
-import CreatorPaymentSettings from "./CreatorPaymentSettings";
-import VerificationForm from "./VerificationForm";
-import CreatorOrdersManager from "./CreatorOrdersManager";
-import PickupAddressSettings from "./PickupAddressSettings";
+import { CreatorSidebar } from "./CreatorSidebar";
+import CreatorSettings from "./CreatorSettings";
+import CreatorExplore from "./CreatorExplore";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import CreatorOrdersManager from "./CreatorOrdersManager";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
-export default function CreatorDashboard() {
+interface CreatorDashboardProps {
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+}
+
+export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChange: propsOnTabChange }: CreatorDashboardProps) {
+  const [internalActiveTab, setInternalActiveTab] = useState("dashboard");
+  const activeTab = propsActiveTab || internalActiveTab;
+  const onTabChange = propsOnTabChange || setInternalActiveTab;
+  
+  const [previousTab, setPreviousTab] = useState("dashboard");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+
   const [stats, setStats] = useState({
     totalCourses: 0,
     totalSales: 0,
@@ -31,44 +55,14 @@ export default function CreatorDashboard() {
   const [copied, setCopied] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<string>("unverified");
   const [verificationNotes, setVerificationNotes] = useState<string | null>(null);
-  const [showVerificationForm, setShowVerificationForm] = useState(false);
 
   useEffect(() => {
     fetchStats();
     fetchUserId();
     fetchVerificationStatus();
 
-    // Subscribe to real-time updates for enrollments
-    const enrollmentsChannel = supabase
-      .channel('dashboard_enrollments')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'enrollments',
-        },
-        () => {
-          fetchStats(); // Refresh stats when enrollments change
-        }
-      )
-      .subscribe();
-
-    // Subscribe to real-time updates for orders
-    const ordersChannel = supabase
-      .channel('dashboard_orders')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders',
-        },
-        () => {
-          fetchStats(); // Refresh stats when orders change
-        }
-      )
-      .subscribe();
+    const enrollmentsChannel = supabase.channel('dashboard_enrollments').on('postgres_changes', { event: '*', schema: 'public', table: 'enrollments' }, () => fetchStats()).subscribe();
+    const ordersChannel = supabase.channel('dashboard_orders').on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchStats()).subscribe();
 
     return () => {
       supabase.removeChannel(enrollmentsChannel);
@@ -76,30 +70,35 @@ export default function CreatorDashboard() {
     };
   }, []);
 
+  // Handle Settings Overlay Logic
+  useEffect(() => {
+    if (activeTab === "profile") {
+      setIsSettingsOpen(true);
+    } else {
+      setPreviousTab(activeTab);
+      setIsSettingsOpen(false);
+      setShowAddModal(false); // Reset add modal state when switching tabs
+    }
+  }, [activeTab]);
+
+  const handleCloseSettings = () => {
+    setIsSettingsOpen(false);
+    onTabChange(previousTab);
+  };
+
   const fetchUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      setUserId(user.id);
-    }
+    if (user) setUserId(user.id);
   };
 
   const fetchVerificationStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("verification_status, verification_notes")
-      .eq("id", user.id)
-      .single();
+    const { data } = await supabase.from("profiles").select("verification_status, verification_notes").eq("id", user.id).single();
     if (data) {
       setVerificationStatus(data.verification_status || "unverified");
       setVerificationNotes(data.verification_notes || null);
     }
-  };
-
-  const handleVerificationComplete = () => {
-    setShowVerificationForm(false);
-    fetchVerificationStatus();
   };
 
   const fetchStats = async () => {
@@ -107,77 +106,30 @@ export default function CreatorDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch total courses
-      const { count: coursesCount } = await supabase
-        .from("courses")
-        .select("*", { count: "exact", head: true })
-        .eq("creator_id", user.id);
-
-      // Fetch total products
-      const { count: productsCount } = await supabase
-        .from("products")
-        .select("*", { count: "exact", head: true })
-        .eq("creator_id", user.id);
-
-      // Fetch creator's course IDs for learner and sales calculations
-      const { data: creatorCourses } = await supabase
-        .from("courses")
-        .select("id")
-        .eq("creator_id", user.id);
-
+      const { count: coursesCount } = await supabase.from("courses").select("*", { count: "exact", head: true }).eq("creator_id", user.id);
+      const { count: productsCount } = await supabase.from("products").select("*", { count: "exact", head: true }).eq("creator_id", user.id);
+      const { data: creatorCourses } = await supabase.from("courses").select("id").eq("creator_id", user.id);
       const courseIds = creatorCourses?.map(c => c.id) || [];
-
-      // Fetch creator's product IDs for sales calculations
-      const { data: creatorProducts } = await supabase
-        .from("products")
-        .select("id")
-        .eq("creator_id", user.id);
-
+      const { data: creatorProducts } = await supabase.from("products").select("id").eq("creator_id", user.id);
       const productIds = creatorProducts?.map(p => p.id) || [];
 
-      // Fetch unique learners (enrolled users)
       let learnersCount = 0;
       if (courseIds.length > 0) {
-        const { data: enrollments } = await supabase
-          .from("enrollments")
-          .select("user_id")
-          .in("course_id", courseIds);
-
-        const uniqueLearners = new Set(enrollments?.map(e => e.user_id) || []);
-        learnersCount = uniqueLearners.size;
+        const { data: enrollments } = await supabase.from("enrollments").select("user_id").in("course_id", courseIds);
+        learnersCount = new Set(enrollments?.map(e => e.user_id) || []).size;
       }
 
-      // Fetch total sales from completed orders (both courses and products)
       let totalSales = 0;
-
-      // Get course sales
       if (courseIds.length > 0) {
-        const { data: courseOrders } = await supabase
-          .from("orders")
-          .select("amount")
-          .eq("status", "completed")
-          .in("item_id", courseIds);
-
+        const { data: courseOrders } = await supabase.from("orders").select("amount").eq("status", "completed").in("item_id", courseIds);
         totalSales += courseOrders?.reduce((sum, order) => sum + Number(order.amount), 0) || 0;
       }
-
-      // Get product sales
       if (productIds.length > 0) {
-        const { data: productOrders } = await supabase
-          .from("orders")
-          .select("amount")
-          .eq("status", "completed")
-          .in("product_id", productIds);
-
+        const { data: productOrders } = await supabase.from("orders").select("amount").eq("status", "completed").in("product_id", productIds);
         totalSales += productOrders?.reduce((sum, order) => sum + Number(order.amount), 0) || 0;
       }
 
-      setStats({
-        totalCourses: coursesCount || 0,
-        totalSales,
-        totalLearners: learnersCount,
-        productsListed: productsCount || 0,
-      });
+      setStats({ totalCourses: coursesCount || 0, totalSales, totalLearners: learnersCount, productsListed: productsCount || 0 });
     } catch (error) {
       console.error("Error fetching stats:", error);
       toast.error("Failed to load dashboard stats");
@@ -196,194 +148,154 @@ export default function CreatorDashboard() {
     }
   };
 
+  const getAddButtonText = () => {
+    if (activeTab === "courses") return "Add New Course";
+    if (activeTab === "products") return "Add New Product";
+    return "";
+  };
+
+  const showHeaderAddButton = activeTab === "courses" || activeTab === "products";
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-bold">Creator Dashboard</h1>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <Share2 className="h-4 w-4" />
-              Share Storefront
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-2">Share Your Storefront</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Copy this link to share your creator page with others
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={`${window.location.origin}/creator/${userId}`}
-                  className="flex-1 px-3 py-2 text-sm border rounded-md bg-muted"
-                />
-                <Button size="sm" onClick={handleCopyShareLink} className="gap-2">
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  {copied ? "Copied" : "Copy"}
-                </Button>
-              </div>
+    <div className="flex w-full min-h-screen bg-gray-50/50 dark:bg-[#030303] dashboard-font transition-all duration-500">
+      <CreatorSidebar activeTab={isSettingsOpen ? "profile" : activeTab} onTabChange={onTabChange} />
+      
+      <main className="flex-1 ml-16 transition-all duration-300">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-12 lg:py-16">
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 px-2">
+            <div>
+              <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-4 text-black dark:text-white uppercase transition-colors">
+                {activeTab === "dashboard" ? "Dashboard" : activeTab === "profile" ? "Settings" : activeTab}
+              </h1>
+              <p className="text-gray-500 dark:text-zinc-500 text-lg font-medium leading-relaxed max-w-xl transition-colors">
+                {activeTab === "dashboard" ? "Welcome back! Here's what's happening today." : 
+                 activeTab === "explore" ? "Connect with other creators and browse the marketplace." :
+                 `Manage your ${activeTab} content and track performance.`}
+              </p>
             </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <Card className="shadow-soft">
-          <CardHeader className="pb-3">
-            <CardDescription>Total Courses</CardDescription>
-            <CardTitle className="text-3xl">{stats.totalCourses}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BookOpen className="text-primary w-8 h-8" />
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-soft">
-          <CardHeader className="pb-3">
-            <CardDescription>Total Sales</CardDescription>
-            <CardTitle className="text-3xl">₹{stats.totalSales.toFixed(2)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <IndianRupee className="text-secondary w-8 h-8" />
-            <p className="text-xs text-muted-foreground mt-2">From completed orders</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-soft">
-          <CardHeader className="pb-3">
-            <CardDescription>Total Learners</CardDescription>
-            <CardTitle className="text-3xl">{stats.totalLearners}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Store className="text-accent w-8 h-8" />
-            <p className="text-xs text-muted-foreground mt-2">Unique enrolled users</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-soft">
-          <CardHeader className="pb-3">
-            <CardDescription>Products Listed</CardDescription>
-            <CardTitle className="text-3xl">{stats.productsListed}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Package className="text-primary w-8 h-8" />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Verification Status Card */}
-      <Card className={`mb-8 border-2 ${verificationStatus === "verified" ? "border-green-500/60 bg-green-50/50 dark:bg-green-950/20" :
-        verificationStatus === "pending" ? "border-yellow-500/60 bg-yellow-50/50 dark:bg-yellow-950/20" :
-          verificationStatus === "rejected" ? "border-red-500/60 bg-red-50/50 dark:bg-red-950/20" :
-            "border-dashed"
-        }`}>
-        <CardContent className="py-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+            
             <div className="flex items-center gap-3">
-              {verificationStatus === "verified" && <ShieldCheck className="h-8 w-8 text-green-600 flex-shrink-0" />}
-              {verificationStatus === "pending" && <Clock className="h-8 w-8 text-yellow-600 flex-shrink-0" />}
-              {verificationStatus === "rejected" && <ShieldAlert className="h-8 w-8 text-red-600 flex-shrink-0" />}
-              {verificationStatus === "unverified" && <Sparkles className="h-8 w-8 text-muted-foreground flex-shrink-0" />}
-              <div>
-                {verificationStatus === "verified" && (
-                  <>
-                    <p className="font-semibold text-green-700 dark:text-green-400">✓ Verified Seller</p>
-                    <p className="text-sm text-muted-foreground">Your profile is verified. A badge is shown on your storefront.</p>
-                  </>
-                )}
-                {verificationStatus === "pending" && (
-                  <>
-                    <p className="font-semibold text-yellow-700 dark:text-yellow-400">Verification Pending</p>
-                    <p className="text-sm text-muted-foreground">Your request is under review. An admin will respond soon.</p>
-                  </>
-                )}
-                {verificationStatus === "rejected" && (
-                  <>
-                    <p className="font-semibold text-red-700 dark:text-red-400">Verification Rejected</p>
-                    {verificationNotes && (
-                      <p className="text-sm text-muted-foreground mt-0.5">Reason: {verificationNotes}</p>
-                    )}
-                  </>
-                )}
-                {verificationStatus === "unverified" && (
-                  <>
-                    <p className="font-semibold">Get Verified</p>
-                    <p className="text-sm text-muted-foreground">Build buyer trust with a verified seller badge on your storefront.</p>
-                  </>
-                )}
-              </div>
+              {/* Only show Share button on Dashboard tab */}
+              {activeTab === "dashboard" && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="h-14 px-8 rounded-[2rem] border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900 text-gray-700 dark:text-zinc-300 font-bold transition-all hover:scale-105 active:scale-95 shadow-sm">
+                      <Share2 className="mr-2 h-5 w-5" />
+                      Share Page
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 rounded-[2rem] p-5 shadow-2xl border-none bg-white dark:bg-zinc-950">
+                    <div className="space-y-5 text-black dark:text-white">
+                      <div>
+                        <h3 className="text-lg font-black mb-1">Share Your Store</h3>
+                        <p className="text-sm text-gray-500 dark:text-zinc-500 font-medium leading-snug">
+                          Let people explore your unique creations and courses.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={`${window.location.origin}/creator/${userId}`}
+                          className="flex-1 px-4 py-3 text-xs border dark:border-zinc-800 rounded-2xl bg-gray-50 dark:bg-zinc-900 font-mono text-gray-600 dark:text-zinc-400 focus:outline-none"
+                        />
+                        <Button size="icon" onClick={handleCopyShareLink} className="rounded-2xl h-10 w-10 flex-shrink-0 bg-black dark:bg-primary hover:bg-gray-800 dark:hover:bg-primary/90">
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+
+              {/* Add New Button for Courses/Products in Header */}
+              {showHeaderAddButton && (
+                <Button 
+                  onClick={() => setShowAddModal(true)}
+                  className="h-14 px-8 rounded-[2rem] bg-primary hover:bg-primary/90 text-white font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  {getAddButtonText()}
+                </Button>
+              )}
             </div>
-            {(verificationStatus === "unverified" || verificationStatus === "rejected") && !showVerificationForm && (
-              <Button
-                onClick={() => setShowVerificationForm(true)}
-                className="gap-2 flex-shrink-0"
-                variant={verificationStatus === "rejected" ? "outline" : "default"}
-              >
-                <Sparkles className="h-4 w-4" />
-                {verificationStatus === "rejected" ? "Re-apply KYC" : "Start KYC Verification"}
-              </Button>
-            )}
           </div>
 
-          {showVerificationForm && (
-            <div className="mt-8 animate-in fade-in slide-in-from-top-4">
-              <VerificationForm onComplete={handleVerificationComplete} />
+          {/* Stats Section - ONLY visible on Dashboard tab */}
+          {activeTab === "dashboard" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20 px-2 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
+              <StatCard label="Active Courses" value={stats.totalCourses} icon={<BookOpen className="h-7 w-7 text-black dark:text-white" />} color="bg-indigo-50 dark:bg-zinc-900/40" borderColor="dark:border-indigo-500/10" />
+              <StatCard label="Total Revenue" value={`₹${stats.totalSales.toLocaleString()}`} icon={<TrendingUp className="h-7 w-7 text-black dark:text-white" />} color="bg-emerald-50 dark:bg-zinc-900/40" sub="Last 30 days" borderColor="dark:border-emerald-500/10" />
+              <StatCard label="Total Students" value={stats.totalLearners} icon={<Users className="h-7 w-7 text-black dark:text-white" />} color="bg-violet-50 dark:bg-zinc-900/40" borderColor="dark:border-violet-500/10" />
+              <StatCard label="Digital Products" value={stats.productsListed} icon={<Package className="h-7 w-7 text-black dark:text-white" />} color="bg-orange-50 dark:bg-zinc-900/40" borderColor="dark:border-orange-500/10" />
             </div>
           )}
-        </CardContent>
-      </Card>
 
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="courses" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 max-w-5xl mb-8">
-          <TabsTrigger value="courses">Courses</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="storefront">Storefront</TabsTrigger>
-          <TabsTrigger value="earnings">Earnings</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="shipping">Shipping</TabsTrigger>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-        </TabsList>
+          {/* Main Content Area */}
+          <div className="px-2 pb-24">
+            <Tabs value={activeTab} className="w-full">
+              <TabsContent value="dashboard" className="mt-0 outline-none">
+                <div className="bg-white dark:bg-zinc-900/40 rounded-[2.5rem] p-12 shadow-sm border border-gray-100 dark:border-zinc-800 flex flex-col items-center justify-center text-center backdrop-blur-sm">
+                  <LayoutDashboard className="h-20 w-20 text-indigo-600 dark:text-indigo-400 mb-6" />
+                  <h2 className="text-4xl font-black mb-4 text-black dark:text-white">Welcome to your Dashboard</h2>
+                  <p className="text-gray-500 dark:text-zinc-500 max-w-md font-medium leading-relaxed">Explore your courses, products, and earnings using the sidebar navigation. Your stats and share options are right above.</p>
+                </div>
+              </TabsContent>
+              <TabsContent value="courses" className="mt-0 outline-none">
+                <CoursesManager 
+                  onCourseChange={fetchStats} 
+                  isAddDialogOpen={activeTab === "courses" && showAddModal}
+                  onAddDialogChange={(open) => setShowAddModal(open)}
+                />
+              </TabsContent>
+              <TabsContent value="products" className="mt-0 outline-none">
+                <ProductsManager 
+                  onProductChange={fetchStats} 
+                  isAddDialogOpen={activeTab === "products" && showAddModal}
+                  onAddDialogChange={(open) => setShowAddModal(open)}
+                />
+              </TabsContent>
+              <TabsContent value="orders" className="mt-0 outline-none"><CreatorOrdersManager /></TabsContent>
+              <TabsContent value="earnings" className="mt-0 outline-none"><EarningsManager /></TabsContent>
+              <TabsContent value="explore" className="mt-0 outline-none">
+                <CreatorExplore />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </main>
 
-        <TabsContent value="courses">
-          <CoursesManager onCourseChange={fetchStats} />
-        </TabsContent>
-
-        <TabsContent value="products">
-          <ProductsManager onProductChange={fetchStats} />
-        </TabsContent>
-
-        <TabsContent value="orders">
-          <CreatorOrdersManager />
-        </TabsContent>
-
-        <TabsContent value="storefront">
-          <StorefrontEditor />
-        </TabsContent>
-
-        <TabsContent value="earnings">
-          <EarningsManager />
-        </TabsContent>
-
-        <TabsContent value="payments">
-          <CreatorPaymentSettings />
-        </TabsContent>
-
-        <TabsContent value="shipping">
-          <PickupAddressSettings />
-        </TabsContent>
-
-        <TabsContent value="profile">
-          <ProfileEditor />
-        </TabsContent>
-      </Tabs>
+      {/* Settings Modal - Reference Inspired */}
+      <Dialog open={isSettingsOpen} onOpenChange={handleCloseSettings}>
+        <DialogContent className="max-w-[1000px] w-[95vw] h-[85vh] p-0 overflow-hidden border-none shadow-2xl rounded-[2.5rem] bg-transparent">
+          <CreatorSettings 
+            verificationStatus={verificationStatus}
+            verificationNotes={verificationNotes}
+            onVerificationComplete={fetchVerificationStatus}
+            onClose={handleCloseSettings}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function StatCard({ label, value, icon, color, sub, borderColor }: { label: string; value: string | number; icon: React.ReactNode; color: string; sub?: string; borderColor?: string }) {
+  return (
+    <Card className={cn("border-none shadow-none rounded-[2.5rem] bg-white dark:bg-zinc-900 hover:bg-gray-50/50 dark:hover:bg-zinc-800 transition-all p-1", borderColor)}>
+      <div className={cn("w-full h-full rounded-[2rem] p-8 flex flex-col justify-between group cursor-default transition-all duration-500 border border-transparent", color, borderColor && "dark:border-opacity-100")}>
+        <div className="flex justify-between items-start mb-6">
+          <div className="p-4 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm text-black dark:text-white group-hover:scale-110 transition-transform duration-500">
+            {icon}
+          </div>
+          {sub && <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-500 bg-white/50 dark:bg-zinc-800/50 px-3 py-1 rounded-full">{sub}</span>}
+        </div>
+        <div>
+          <p className="text-gray-500 dark:text-zinc-500 font-bold uppercase tracking-widest text-xs mb-2 px-1">{label}</p>
+          <p className="text-5xl font-black text-black dark:text-white tracking-tight leading-none group-hover:translate-x-1 transition-transform duration-500">{value}</p>
+        </div>
+      </div>
+    </Card>
   );
 }

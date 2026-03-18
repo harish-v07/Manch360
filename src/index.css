@@ -57,49 +57,49 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 240 10% 4%;
+    --background: 240 10% 2%;
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 6%;
+    --card: 240 10% 4%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 6%;
+    --popover: 240 10% 5%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 0% 100%;
-    --primary-foreground: 240 10% 4%;
-    --primary-hover: 0 0% 90%;
+    --primary: 280 60% 65%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 280 60% 60%;
 
-    --secondary: 240 10% 15%;
+    --secondary: 240 10% 12%;
     --secondary-foreground: 0 0% 98%;
-    --secondary-hover: 240 10% 20%;
+    --secondary-hover: 240 10% 15%;
 
     --accent: 280 60% 60%;
     --accent-foreground: 0 0% 100%;
     --accent-hover: 280 60% 65%;
 
-    --muted: 240 10% 10%;
+    --muted: 240 5% 10%;
     --muted-foreground: 240 5% 65%;
 
     --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 15%;
-    --input: 240 10% 15%;
-    --ring: 0 0% 100%;
+    --border: 240 10% 12%;
+    --input: 240 10% 12%;
+    --ring: 280 60% 65%;
     
     --gradient-hero: radial-gradient(circle at 50% -20%, hsla(280, 60%, 40%, 0.1), transparent 70%);
-    --gradient-card: linear-gradient(180deg, hsl(240 10% 6%), hsl(240 10% 8%));
-    --shadow-soft: 0 4px 24px -4px hsl(0 0% 0% / 0.4);
-    --shadow-hover: 0 8px 32px -4px hsl(0 0% 0% / 0.6);
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --gradient-card: linear-gradient(180deg, hsl(240 10% 4%), hsl(240 10% 6%));
+    --shadow-soft: 0 4px 24px -4px hsl(0 0% 0% / 0.6);
+    --shadow-hover: 0 8px 32px -4px hsl(0 0% 0% / 0.8);
+    --sidebar-background: 240 10% 3%;
+    --sidebar-foreground: 240 5% 70%;
+    --sidebar-primary: 280 60% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 240 5% 12%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 240 10% 10%;
+    --sidebar-ring: 280 60% 65%;
   }
 }
 
@@ -232,6 +232,30 @@ All colors MUST be HSL.
   
   .animate-fade-in {
     animation: fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Custom Slim Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 20px;
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #52525b;
+  }
+  .custom-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
   }
 }
 

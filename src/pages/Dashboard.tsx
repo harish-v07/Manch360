@@ -58,13 +58,14 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen">
-        <Navbar />
-        <div className="flex items-center justify-center pt-32">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <div className="relative">
+          <div className="w-20 h-20 border-4 border-primary/20 rounded-full"></div>
+          <div className="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+        </div>
+        <div className="mt-8 text-center animate-pulse">
+          <p className="text-xl font-black tracking-tight dark:text-white">MANCH360</p>
+          <p className="text-sm text-muted-foreground mt-2 font-medium">Preparing your workspace...</p>
         </div>
       </div>
     );

@@ -75,6 +75,8 @@ export default function AdminDashboardInline() {
   const [verSearch, setVerSearch] = useState("");
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
+  const pendingCount = (verificationRequests || []).filter(r => r.verification_status === "pending").length;
+
   useEffect(() => {
     fetchInitialData();
   }, []);
@@ -330,7 +332,14 @@ export default function AdminDashboardInline() {
       <Tabs defaultValue="users">
         <TabsList className="mb-8 p-1 bg-gray-100/50 dark:bg-zinc-900/50 rounded-2xl h-14">
           <TabsTrigger value="users" className="rounded-xl px-8 font-black uppercase tracking-widest text-[10px]">Users</TabsTrigger>
-          <TabsTrigger value="verification" className="rounded-xl px-8 font-black uppercase tracking-widest text-[10px]">Verification</TabsTrigger>
+          <TabsTrigger value="verification" className="rounded-xl px-8 font-black uppercase tracking-widest text-[10px] gap-2">
+            Verification
+            {pendingCount > 0 && (
+              <span className="flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-lg animate-pulse">
+                {pendingCount}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">

@@ -6,19 +6,20 @@ import {
   LogOut,
   Compass,
   ShoppingBag,
-  ShoppingCart
+  ShoppingCart,
+  Shield
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
-
 interface LearnerSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  isAdmin?: boolean;
 }
 
-export function LearnerSidebar({ activeTab, onTabChange }: LearnerSidebarProps) {
+export function LearnerSidebar({ activeTab, onTabChange, isAdmin }: LearnerSidebarProps) {
   const navigate = useNavigate();
   const { getTotalItems } = useCart();
   const cartItemCount = getTotalItems();
@@ -34,6 +35,7 @@ export function LearnerSidebar({ activeTab, onTabChange }: LearnerSidebarProps) 
     { id: "orders", icon: ShoppingBag, label: "My Orders" },
     { id: "explore", icon: Compass, label: "Explore" },
     { id: "cart", icon: ShoppingCart, label: "Cart" },
+    ...(isAdmin ? [{ id: "admin", icon: Shield, label: "Admin" }] : []),
   ];
 
   return (

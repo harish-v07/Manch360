@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { Navbar } from "@/components/Navbar";
@@ -10,10 +10,24 @@ import { useSessionMonitor } from "@/hooks/useSessionMonitor";
 export default function Dashboard() {
   useSessionMonitor();
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialTab = searchParams.get("tab") || "dashboard";
+
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(initialTab);
+  
+  // Update URL when tab changes
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("tab") !== activeTab) {
+      params.set("tab", activeTab);
+      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+    }
+  }, [activeTab, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -21,7 +35,7 @@ export default function Dashboard() {
       if (!session) {
         navigate("/auth");
       } else {
-        fetchUserRole(session.user.id);
+        fetchUserRole(session.user.id, session.user.email);
       }
     });
 
@@ -32,27 +46,27 @@ export default function Dashboard() {
       if (!session) {
         navigate("/auth");
       } else {
-        fetchUserRole(session.user.id);
+        fetchUserRole(session?.user?.id || "", session?.user?.email);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserRole = async (userId: string, email?: string) => {
     const { data, error } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("Error fetching user role:", error);
-      setLoading(false);
-      return;
     }
 
-    setUserRole(data?.role || "learner");
+    const role = data?.role || "learner";
+    setUserRole(role);
+    setIsAdmin(role === "admin" || email === "vharish7100@gmail.com");
     setLoading(false);
   };
 
@@ -74,14 +88,14 @@ export default function Dashboard() {
   if (userRole === "creator") {
     return (
       <div className="min-h-screen bg-background flex overflow-hidden">
-        <CreatorDashboard activeTab={activeTab} onTabChange={setActiveTab} />
+        <CreatorDashboard activeTab={activeTab} onTabChange={setActiveTab} isAdmin={isAdmin} />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background flex overflow-hidden">
-      <LearnerDashboard activeTab={activeTab} onTabChange={setActiveTab} />
+      <LearnerDashboard activeTab={activeTab} onTabChange={setActiveTab} isAdmin={isAdmin} />
     </div>
   );
 }

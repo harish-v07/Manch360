@@ -13,13 +13,15 @@ import LearnerCartInline from "./LearnerCartInline";
 import CoursePreviewInline from "./CoursePreviewInline";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LearnerSettings from "./LearnerSettings";
+import AdminDashboardInline from "./AdminDashboardInline";
 
 interface LearnerDashboardProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  isAdmin?: boolean;
 }
 
-export default function LearnerDashboard({ activeTab, onTabChange }: LearnerDashboardProps) {
+export default function LearnerDashboard({ activeTab, onTabChange, isAdmin }: LearnerDashboardProps) {
   const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,6 +180,8 @@ export default function LearnerDashboard({ activeTab, onTabChange }: LearnerDash
         return <LearnerCartInline />;
       case "orders":
         return <LearnerOrdersManager />;
+      case "admin":
+        return <AdminDashboardInline />;
       default:
         return null;
     }
@@ -185,7 +189,7 @@ export default function LearnerDashboard({ activeTab, onTabChange }: LearnerDash
 
   return (
     <>
-      <LearnerSidebar activeTab={isSettingsOpen ? "profile" : activeTab} onTabChange={onTabChange} />
+      <LearnerSidebar activeTab={isSettingsOpen ? "profile" : activeTab} onTabChange={onTabChange} isAdmin={isAdmin} />
       <main className="flex-1 pl-16 h-screen overflow-y-auto custom-scrollbar">
         <div className="max-w-7xl mx-auto px-8 pt-12 pb-20">
           {renderContent()}

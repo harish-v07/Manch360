@@ -7,7 +7,8 @@ import {
   Settings, 
   LogOut,
   Compass,
-  ShoppingBag
+  ShoppingBag,
+  Shield
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,9 +17,10 @@ import { toast } from "sonner";
 interface CreatorSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  isAdmin?: boolean;
 }
 
-export function CreatorSidebar({ activeTab, onTabChange }: CreatorSidebarProps) {
+export function CreatorSidebar({ activeTab, onTabChange, isAdmin }: CreatorSidebarProps) {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -34,6 +36,7 @@ export function CreatorSidebar({ activeTab, onTabChange }: CreatorSidebarProps) 
     { id: "orders", icon: ShoppingBag, label: "Orders" },
     { id: "earnings", icon: IndianRupee, label: "Earnings" },
     { id: "explore", icon: Compass, label: "Explore" },
+    ...(isAdmin ? [{ id: "admin", icon: Shield, label: "Admin" }] : []),
   ];
 
   return (

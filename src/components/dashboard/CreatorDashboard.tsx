@@ -29,6 +29,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import CreatorOrdersManager from "./CreatorOrdersManager";
+import AdminDashboardInline from "./AdminDashboardInline";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import CoursePreviewInline from "./CoursePreviewInline";
 import CreatorStorefrontInline from "./CreatorStorefrontInline";
@@ -36,9 +37,10 @@ import CreatorStorefrontInline from "./CreatorStorefrontInline";
 interface CreatorDashboardProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  isAdmin?: boolean;
 }
 
-export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChange: propsOnTabChange }: CreatorDashboardProps) {
+export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChange: propsOnTabChange, isAdmin }: CreatorDashboardProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("dashboard");
   const activeTab = propsActiveTab || internalActiveTab;
   const onTabChange = propsOnTabChange || setInternalActiveTab;
@@ -173,7 +175,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
 
   return (
     <div className="flex w-full min-h-screen bg-gray-50/50 dark:bg-[#030303] dashboard-font transition-all duration-500">
-      <CreatorSidebar activeTab={isSettingsOpen ? "profile" : activeTab} onTabChange={onTabChange} />
+      <CreatorSidebar activeTab={isSettingsOpen ? "profile" : activeTab} onTabChange={onTabChange} isAdmin={isAdmin} />
       
       <main className="flex-1 ml-16 transition-all duration-300">
         <div className="max-w-[1240px] mx-auto px-6 md:px-10 py-10 lg:py-12">
@@ -306,6 +308,9 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
                     onViewStorefront={(id) => setPreviewCreatorId(id)}
                   />
                 )}
+              </TabsContent>
+              <TabsContent value="admin" className="mt-0 outline-none">
+                <AdminDashboardInline />
               </TabsContent>
             </Tabs>
           </div>

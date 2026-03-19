@@ -87,7 +87,7 @@ export const Navbar = () => {
                   </Button>
                 </Link>
                 {isAdmin && (
-                  <Link to="/admin" className="hidden lg:block">
+                  <Link to="/dashboard?tab=admin" className="hidden lg:block">
                     <Button variant="ghost" className="text-accent hover:text-accent hover:bg-accent/10 font-bold">
                       Admin
                     </Button>

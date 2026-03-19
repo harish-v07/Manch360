@@ -4,10 +4,6 @@ Your all-in-one platform to teach courses, sell products, and grow your creative
 
 ## Getting Started
 
-### Prerequisites
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
 ### Installation
 
 Follow these steps:

@@ -13,21 +13,36 @@ export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const initialTab = searchParams.get("tab") || "dashboard";
+  const initialViewId = searchParams.get("viewId") || null;
 
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [viewId, setViewId] = useState<string | null>(initialViewId);
+  const [tabClickCounter, setTabClickCounter] = useState(0);
   
-  // Update URL when tab changes
+  // Update URL when tab or viewId changes
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+    let changed = false;
     if (params.get("tab") !== activeTab) {
       params.set("tab", activeTab);
+      changed = true;
+    }
+    const currentViewId = params.get("viewId");
+    if (viewId && currentViewId !== viewId) {
+      params.set("viewId", viewId);
+      changed = true;
+    } else if (!viewId && currentViewId) {
+      params.delete("viewId");
+      changed = true;
+    }
+    if (changed) {
       navigate(`${location.pathname}?${params.toString()}`, { replace: true });
     }
-  }, [activeTab, location.pathname, location.search, navigate]);
+  }, [activeTab, viewId, location.pathname, navigate]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -85,17 +100,23 @@ export default function Dashboard() {
     );
   }
 
+  const handleTabChange = (tab: string) => {
+    setViewId(null);
+    setActiveTab(tab);
+    setTabClickCounter(c => c + 1);
+  };
+
   if (userRole === "creator") {
     return (
       <div className="min-h-screen bg-background flex overflow-hidden">
-        <CreatorDashboard activeTab={activeTab} onTabChange={setActiveTab} isAdmin={isAdmin} />
+        <CreatorDashboard activeTab={activeTab} onTabChange={handleTabChange} isAdmin={isAdmin} viewId={viewId} onViewIdChange={setViewId} tabClickCounter={tabClickCounter} />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background flex overflow-hidden">
-      <LearnerDashboard activeTab={activeTab} onTabChange={setActiveTab} isAdmin={isAdmin} />
+      <LearnerDashboard activeTab={activeTab} onTabChange={handleTabChange} isAdmin={isAdmin} viewId={viewId} onViewIdChange={setViewId} tabClickCounter={tabClickCounter} />
     </div>
   );
 }

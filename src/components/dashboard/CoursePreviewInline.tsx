@@ -222,7 +222,7 @@ export default function CoursePreviewInline({ courseId, onBack }: CoursePreviewI
       setCourse(courseData);
 
       const { data: creatorProfile } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("name, show_watermark")
         .eq("id", courseData.creator_id)
         .single();
@@ -576,7 +576,7 @@ export default function CoursePreviewInline({ courseId, onBack }: CoursePreviewI
 
                 <button
                   onClick={toggleFullscreen}
-                  className="absolute top-4 right-4 z-10 p-2.5 rounded-xl text-white/70 hover:text-white hover:bg-black/50 transition-all backdrop-blur-sm"
+                  className="absolute top-4 right-4 z-10 p-2.5 rounded-xl text-white bg-black/50 hover:bg-black/70 transition-all backdrop-blur-sm border border-white/10 shadow-md"
                 >
                   {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
                 </button>

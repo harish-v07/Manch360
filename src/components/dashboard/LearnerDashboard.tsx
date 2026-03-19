@@ -15,19 +15,39 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LearnerSettings from "./LearnerSettings";
 import AdminDashboardInline from "./AdminDashboardInline";
 
+import CreatorStorefrontInline from "./CreatorStorefrontInline";
+
 interface LearnerDashboardProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   isAdmin?: boolean;
+  viewId?: string | null;
+  onViewIdChange?: (id: string | null) => void;
+  tabClickCounter?: number;
 }
 
-export default function LearnerDashboard({ activeTab, onTabChange, isAdmin }: LearnerDashboardProps) {
+export default function LearnerDashboard({ activeTab, onTabChange, isAdmin, viewId, onViewIdChange, tabClickCounter }: LearnerDashboardProps) {
   const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewingCourseId, setViewingCourseId] = useState<string | null>(null);
+  const [viewingCourseId, setViewingCourseIdInternal] = useState<string | null>(
+    activeTab === "dashboard" && viewId ? viewId : null
+  );
+  const [viewingStorefrontId, setViewingStorefrontIdInternal] = useState<string | null>(
+    activeTab === "explore" && viewId ? viewId : null
+  );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [previousTab, setPreviousTab] = useState("dashboard");
+
+  const setViewingCourseId = (id: string | null) => {
+    setViewingCourseIdInternal(id);
+    onViewIdChange?.(id);
+  };
+
+  const setViewingStorefrontId = (id: string | null) => {
+    setViewingStorefrontIdInternal(id);
+    onViewIdChange?.(id);
+  };
 
   useEffect(() => {
     fetchEnrollments();
@@ -49,6 +69,14 @@ export default function LearnerDashboard({ activeTab, onTabChange, isAdmin }: Le
       setIsSettingsOpen(false);
     }
   }, [activeTab]);
+
+  // Clear previews when user clicks a sidebar tab
+  useEffect(() => {
+    if (tabClickCounter && tabClickCounter > 0) {
+      setViewingCourseIdInternal(null);
+      setViewingStorefrontIdInternal(null);
+    }
+  }, [tabClickCounter]);
 
   const handleCloseSettings = () => {
     setIsSettingsOpen(false);
@@ -175,7 +203,10 @@ export default function LearnerDashboard({ activeTab, onTabChange, isAdmin }: Le
           </div>
         );
       case "explore":
-        return <ExploreInline />;
+        if (viewingStorefrontId) {
+          return <CreatorStorefrontInline creatorId={viewingStorefrontId} onBack={() => setViewingStorefrontId(null)} />;
+        }
+        return <ExploreInline onViewStorefront={(id) => setViewingStorefrontId(id)} />;
       case "cart":
         return <LearnerCartInline />;
       case "orders":

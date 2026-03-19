@@ -38,9 +38,12 @@ interface CreatorDashboardProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
   isAdmin?: boolean;
+  viewId?: string | null;
+  onViewIdChange?: (id: string | null) => void;
+  tabClickCounter?: number;
 }
 
-export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChange: propsOnTabChange, isAdmin }: CreatorDashboardProps) {
+export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChange: propsOnTabChange, isAdmin, viewId, onViewIdChange, tabClickCounter }: CreatorDashboardProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("dashboard");
   const activeTab = propsActiveTab || internalActiveTab;
   const onTabChange = propsOnTabChange || setInternalActiveTab;
@@ -48,8 +51,22 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
   const [previousTab, setPreviousTab] = useState("dashboard");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [previewCourseId, setPreviewCourseId] = useState<string | null>(null);
-  const [previewCreatorId, setPreviewCreatorId] = useState<string | null>(null);
+  const [previewCourseId, setPreviewCourseIdInternal] = useState<string | null>(
+    activeTab === "courses" && viewId ? viewId : null
+  );
+  const [previewCreatorId, setPreviewCreatorIdInternal] = useState<string | null>(
+    activeTab === "explore" && viewId ? viewId : null
+  );
+
+  const setPreviewCourseId = (id: string | null) => {
+    setPreviewCourseIdInternal(id);
+    onViewIdChange?.(id);
+  };
+
+  const setPreviewCreatorId = (id: string | null) => {
+    setPreviewCreatorIdInternal(id);
+    onViewIdChange?.(id);
+  };
 
   const [stats, setStats] = useState({
     totalCourses: 0,
@@ -78,18 +95,24 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
     };
   }, []);
 
-  // Handle Settings Overlay Logic
+  // Handle Settings Overlay
   useEffect(() => {
     if (activeTab === "profile") {
       setIsSettingsOpen(true);
     } else {
       setPreviousTab(activeTab);
       setIsSettingsOpen(false);
-      setShowAddModal(false); // Reset add modal state when switching tabs
-      setPreviewCourseId(null); // Clear course preview when switching tabs
-      setPreviewCreatorId(null); // Clear storefront preview when switching tabs
+      setShowAddModal(false);
     }
   }, [activeTab]);
+
+  // Clear previews when user clicks a sidebar tab (tabClickCounter changes)
+  useEffect(() => {
+    if (tabClickCounter && tabClickCounter > 0) {
+      setPreviewCourseIdInternal(null);
+      setPreviewCreatorIdInternal(null);
+    }
+  }, [tabClickCounter]);
 
   const handleCloseSettings = () => {
     setIsSettingsOpen(false);
@@ -179,7 +202,8 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
       
       <main className="flex-1 ml-16 transition-all duration-300">
         <div className="max-w-[1240px] mx-auto px-6 md:px-10 py-10 lg:py-12">
-          {/* Header Section */}
+          {/* Header Section - hidden on explore tab since ExploreInline has its own */}
+          {activeTab !== "explore" && (
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-12 px-2">
             <div className="flex-1 min-w-0">
              <h1 className="text-3xl md:text-4xl font-black text-black dark:text-white tracking-tight transition-all duration-500 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -252,6 +276,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
               )}
             </div>
           </div>
+          )}
 
           {/* Stats Section - ONLY visible on Dashboard tab and NOT in preview mode */}
           {activeTab === "dashboard" && !previewCourseId && (

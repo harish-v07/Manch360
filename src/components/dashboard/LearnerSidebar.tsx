@@ -57,7 +57,6 @@ export function LearnerSidebar({ activeTab, onTabChange, isAdmin }: LearnerSideb
                 ? "bg-black dark:bg-primary text-white shadow-lg shadow-primary/20 scale-110"
                 : "text-gray-400 dark:text-zinc-600 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-900"
             )}
-            title={item.label}
           >
             <item.icon className={cn("h-5 w-5", activeTab === item.id ? "h-6 w-6" : "h-5 w-5")} />
             
@@ -85,7 +84,6 @@ export function LearnerSidebar({ activeTab, onTabChange, isAdmin }: LearnerSideb
               ? "bg-black dark:bg-primary text-white shadow-lg"
               : "text-gray-400 dark:text-zinc-600 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-900"
           )}
-          title="Settings"
         >
           <Settings className="h-5 w-5" />
           <span className="absolute left-16 px-2 py-1 rounded bg-black text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[100]">
@@ -95,7 +93,6 @@ export function LearnerSidebar({ activeTab, onTabChange, isAdmin }: LearnerSideb
         <button
           onClick={handleLogout}
           className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 text-gray-400 dark:text-zinc-600 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 relative group"
-          title="Logout"
         >
           <LogOut className="h-5 w-5" />
           <span className="absolute left-16 px-2 py-1 rounded bg-black text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[100]">

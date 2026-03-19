@@ -63,7 +63,13 @@ export const courseSchema = z.object({
     .max(50, 'Category must be less than 50 characters')
     .optional()
     .or(z.literal('')),
-  status: z.enum(['draft', 'published'])
+  status: z.enum(['draft', 'published']),
+  thumbnail_url: z.string()
+    .trim()
+    .url('Invalid thumbnail URL format')
+    .max(2048, 'URL must be less than 2048 characters')
+    .optional()
+    .or(z.literal('')),
 });
 
 // Product validation

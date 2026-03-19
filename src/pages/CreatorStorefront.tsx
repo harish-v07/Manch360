@@ -388,6 +388,11 @@ export default function CreatorStorefront() {
                       className="shadow-soft hover:shadow-hover transition-all cursor-pointer hover:-translate-y-0.5"
                       onClick={() => navigate(`/course-preview/${course.id}`)}
                     >
+                      {course.thumbnail_url && (
+                        <div className="aspect-video w-full overflow-hidden rounded-t-lg">
+                          <S3Media src={course.thumbnail_url} alt={course.title} className="w-full h-full object-cover" controls={false} />
+                        </div>
+                      )}
                       <CardHeader>
                         <CardTitle>{course.title}</CardTitle>
                         <CardDescription>{course.category}</CardDescription>

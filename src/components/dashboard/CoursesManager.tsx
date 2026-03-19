@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, BookOpen, Eye, Users } from "lucide-react";
+import { Plus, Edit, Trash2, BookOpen, Eye, Users, Upload, X, Image as ImageIcon } from "lucide-react";
+import { uploadToS3 } from "@/lib/s3-upload";
+import { useS3Url } from "@/hooks/useS3Url";
+import { S3Media } from "@/components/S3Media";
 import { useNavigate } from "react-router-dom";
 import { courseSchema } from "@/lib/validation";
 
@@ -35,7 +38,14 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
     category: "",
     status: "draft",
     is_free: false,
+    thumbnail_url: "",
   });
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const { s3Url: signedBannerUrl } = useS3Url(formData?.thumbnail_url || undefined);
+  const currentBannerPreview = bannerPreview || signedBannerUrl;
 
   const dialogOpen = isAddDialogOpen !== undefined ? isAddDialogOpen : internalDialogOpen;
   const setDialogOpen = onAddDialogChange || setInternalDialogOpen;
@@ -79,6 +89,32 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
     setLoading(false);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select an image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setBannerFile(file);
+    setBannerPreview(previewUrl);
+  };
+
+  const removeImage = () => {
+    setBannerFile(null);
+    setBannerPreview(null);
+    setFormData(prev => ({ ...prev, thumbnail_url: "" }));
+    if (bannerInputRef.current) bannerInputRef.current.value = "";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -99,53 +135,60 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    if (editingCourse) {
-      // Update existing course
-      const { error } = await supabase
-        .from("courses")
-        .update({
-          title: validation.data.title,
-          description: validation.data.description,
-          price: validation.data.price,
-          category: validation.data.category,
-          status: validation.data.status,
-          is_free: formData.is_free,
-        })
-        .eq("id", editingCourse.id);
+    setLoading(true);
+    try {
+      let finalThumbnailUrl = formData.thumbnail_url;
 
-      if (error) {
-        toast.error("Error updating course");
-        console.error(error);
-      } else {
-        toast.success("Course updated successfully!");
-        setDialogOpen(false);
-        setEditingCourse(null);
-        setFormData({ title: "", description: "", price: "", category: "", status: "draft", is_free: false });
-        fetchCourses();
-        onCourseChange?.();
+      if (bannerFile) {
+        const sanitizeFile = (file: File) => {
+          const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '-').replace(/-+/g, '-');
+          return new File([file], cleanName, { type: file.type });
+        };
+        const safeFile = sanitizeFile(bannerFile);
+        const result = await uploadToS3(safeFile, "courses");
+        finalThumbnailUrl = result.url;
       }
-    } else {
-      // Create new course
-      const { error } = await supabase.from("courses").insert({
-        creator_id: user.id,
+
+      const courseData = {
         title: validation.data.title,
         description: validation.data.description,
         price: validation.data.price,
         category: validation.data.category,
         status: validation.data.status,
         is_free: formData.is_free,
-      });
+        thumbnail_url: finalThumbnailUrl,
+      };
 
-      if (error) {
-        toast.error("Error creating course");
-        console.error(error);
+      if (editingCourse) {
+        const { error } = await supabase
+          .from("courses")
+          .update(courseData)
+          .eq("id", editingCourse.id);
+
+        if (error) throw error;
+        toast.success("Course updated successfully!");
       } else {
+        const { error } = await supabase.from("courses").insert({
+          ...courseData,
+          creator_id: user.id,
+        });
+
+        if (error) throw error;
         toast.success("Course created successfully!");
-        setDialogOpen(false);
-        setFormData({ title: "", description: "", price: "", category: "", status: "draft", is_free: false });
-        fetchCourses();
-        onCourseChange?.();
       }
+
+      setDialogOpen(false);
+      setEditingCourse(null);
+      setBannerFile(null);
+      setBannerPreview(null);
+      setFormData({ title: "", description: "", price: "", category: "", status: "draft", is_free: false, thumbnail_url: "" });
+      fetchCourses();
+      onCourseChange?.();
+    } catch (error: any) {
+      toast.error(error.message || "Error saving course");
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -158,6 +201,7 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
       category: course.category || "",
       status: course.status,
       is_free: course.is_free,
+      thumbnail_url: course.thumbnail_url || "",
     });
     setDialogOpen(true);
   };
@@ -166,7 +210,9 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
     setDialogOpen(open);
     if (!open) {
       setEditingCourse(null);
-      setFormData({ title: "", description: "", price: "", category: "", status: "draft", is_free: false });
+      setBannerFile(null);
+      setBannerPreview(null);
+      setFormData({ title: "", description: "", price: "", category: "", status: "draft", is_free: false, thumbnail_url: "" });
     }
   };
 
@@ -197,6 +243,53 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Course Banner (Optional)</Label>
+              <div className="border-2 border-dashed rounded-xl p-1 overflow-hidden h-32 relative group bg-zinc-900/50 dark:border-zinc-800">
+                {currentBannerPreview ? (
+                  <>
+                    <img src={currentBannerPreview} alt="Banner Preview" className="w-full h-full object-cover rounded-lg" />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => bannerInputRef.current?.click()}
+                        className="mr-2 h-8 rounded-lg"
+                      >
+                        Change
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="h-8 w-8 rounded-lg"
+                        onClick={removeImage}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div
+                    className="w-full h-full flex flex-col items-center justify-center cursor-pointer text-zinc-500 hover:bg-zinc-800/50 rounded-lg transition-colors"
+                    onClick={() => bannerInputRef.current?.click()}
+                  >
+                    <Upload className="h-6 w-6 mb-1 opacity-50" />
+                    <span className="text-xs font-bold">Upload Course Banner</span>
+                    <span className="text-[10px] opacity-70 mt-1 uppercase tracking-widest">Recommended: 1200 x 400px</span>
+                  </div>
+                )}
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="title" className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">Course Title</Label>
               <Input
@@ -287,8 +380,32 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 transition-all duration-500">
           {courses.map((course) => (
-            <Card key={course.id} className="shadow-soft hover:shadow-hover dark:bg-zinc-900/40 dark:border-zinc-800/50 backdrop-blur-sm transition-all group overflow-hidden rounded-2xl">
-              <CardHeader className="relative p-6">
+            <Card key={course.id} className="shadow-soft hover:shadow-hover dark:bg-zinc-900/40 dark:border-zinc-800/50 backdrop-blur-sm transition-all group overflow-hidden rounded-2xl flex flex-col">
+              <div className="h-32 bg-zinc-800 relative overflow-hidden shrink-0">
+                {course.thumbnail_url ? (
+                  <S3Media 
+                    src={course.thumbnail_url} 
+                    alt={course.title} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    controls={false}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-zinc-700">
+                    <ImageIcon className="h-10 w-10 opacity-20" />
+                  </div>
+                )}
+                <div className="absolute top-3 left-3">
+                  <span className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest shadow-lg backdrop-blur-md transition-all",
+                    course.status === 'published' 
+                      ? "bg-emerald-500/80 text-white" 
+                      : "bg-zinc-800/80 text-zinc-400"
+                  )}>
+                    {course.status}
+                  </span>
+                </div>
+              </div>
+              <CardHeader className="relative p-6 pb-0">
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-xl dark:text-white transition-colors">{course.title}</CardTitle>
@@ -349,11 +466,6 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
                     ) : (
                       `₹${course.price}`
                     )}
-                  </span>
-                  <span className={cn(
-                    "px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest bg-secondary dark:bg-zinc-800 text-secondary-foreground dark:text-zinc-400 transition-all"
-                  )}>
-                    {course.status}
                   </span>
                 </div>
                 <div className="text-[10px] font-bold text-gray-400 dark:text-zinc-600 flex items-center gap-2 transition-colors uppercase tracking-wider">

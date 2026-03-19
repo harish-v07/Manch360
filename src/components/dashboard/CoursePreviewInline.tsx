@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, PlayCircle, FileText, CheckCircle2, Maximize2, Minimize2, CreditCard, GraduationCap, Lock, BookOpen, Loader2, Clock, Users, ChevronDown, ChevronUp, Music, Image as ImageIcon, User } from "lucide-react";
 import { CourseComments } from "@/components/course/CourseComments";
 import { cn } from "@/lib/utils";
+import { S3Media } from "@/components/S3Media";
 
 function formatDuration(seconds: number | null): string {
   if (!seconds) return "";
@@ -378,6 +379,17 @@ export default function CoursePreviewInline({ courseId, onBack }: CoursePreviewI
         <Button variant="ghost" onClick={onBack} className="mb-8 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-400 rounded-xl">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back
         </Button>
+
+        {course?.thumbnail_url && (
+          <div className="mb-10 w-full aspect-[21/9] rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-zinc-800 shadow-soft">
+            <S3Media 
+              src={course.thumbnail_url} 
+              alt={course.title} 
+              className="w-full h-full object-cover"
+              controls={false}
+            />
+          </div>
+        )}
 
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">

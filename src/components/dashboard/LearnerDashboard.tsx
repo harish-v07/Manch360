@@ -14,6 +14,7 @@ import CoursePreviewInline from "./CoursePreviewInline";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LearnerSettings from "./LearnerSettings";
 import AdminDashboardInline from "./AdminDashboardInline";
+import { S3Media } from "@/components/S3Media";
 
 import CreatorStorefrontInline from "./CreatorStorefrontInline";
 
@@ -156,10 +157,11 @@ export default function LearnerDashboard({ activeTab, onTabChange, isAdmin, view
                   >
                     <div className="aspect-video bg-gray-100 dark:bg-zinc-800 relative overflow-hidden">
                       {enrollment.courses?.thumbnail_url ? (
-                        <img 
+                        <S3Media 
                           src={enrollment.courses.thumbnail_url} 
                           alt={enrollment.courses.title}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          controls={false}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-primary/20">

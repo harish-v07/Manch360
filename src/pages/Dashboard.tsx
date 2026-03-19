@@ -80,11 +80,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <div className="pt-20">
-        <LearnerDashboard />
-      </div>
+    <div className="min-h-screen bg-background flex overflow-hidden">
+      <LearnerDashboard activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }

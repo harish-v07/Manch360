@@ -22,7 +22,7 @@ import ProductsManager from "./ProductsManager";
 import EarningsManager from "./EarningsManager";
 import { CreatorSidebar } from "./CreatorSidebar";
 import CreatorSettings from "./CreatorSettings";
-import CreatorExplore from "./CreatorExplore";
+import ExploreInline from "./ExploreInline";
 import {
   Popover,
   PopoverContent,
@@ -302,7 +302,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
                     onBack={() => setPreviewCreatorId(null)} 
                   />
                 ) : (
-                  <CreatorExplore 
+                  <ExploreInline 
                     onViewStorefront={(id) => setPreviewCreatorId(id)}
                   />
                 )}

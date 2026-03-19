@@ -46,10 +46,10 @@ export function useSessionMonitor() {
                 // Do NOT generate a new token and overwrite — that would kick out the very browser
                 // that just logged in (race condition).
                 if (!localToken) {
-                    console.log("Session monitor: No local token found, checking DB...");
+                    console.log("Session monitor: No local token found. This might be a fresh login or cleared storage. Checking DB...");
                     if (profile?.active_session_id) {
-                        // Small delay to ensure Auth.tsx has finished its work if we just logged in
-                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        // Wait a bit longer to ensure Auth.tsx has finished its work and DB has settled
+                        await new Promise(resolve => setTimeout(resolve, 3000));
                         
                         // Re-fetch to be absolutely sure after delay
                         const { data: freshProfile } = await supabase
@@ -59,7 +59,7 @@ export function useSessionMonitor() {
                             .single();
                         
                         if (freshProfile?.active_session_id) {
-                            console.log("Session monitor: Adopting token from DB:", freshProfile.active_session_id);
+                            console.log("Session monitor: Adopting active session ID from DB:", freshProfile.active_session_id);
                             localStorage.setItem("ch_session_token", freshProfile.active_session_id);
                         }
                     } else {

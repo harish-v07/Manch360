@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ export default function Auth() {
   const [isSignup, setIsSignup] = useState(searchParams.get("mode") === "signup");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const isSubmitting = useState(false)[0]; // We use a ref actually but keeping state for UI
+  const isSubmittingRef = useRef(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -42,7 +44,8 @@ export default function Auth() {
         // User clicked a reset link — don't redirect, let ResetPassword page handle it
         return;
       }
-      if (event === "SIGNED_IN" && session) {
+      if (event === "SIGNED_IN" && session && !isSubmittingRef.current) {
+        // Only auto-redirect if NOT in the middle of a manual handleSubmit login
         navigate("/dashboard");
       }
     });
@@ -109,6 +112,7 @@ export default function Auth() {
           return;
         }
 
+        isSubmittingRef.current = true;
         const { error } = await supabase.auth.signUp({
           email: validation.data.email,
           password: validation.data.password,
@@ -121,10 +125,16 @@ export default function Auth() {
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          isSubmittingRef.current = false;
+          throw error;
+        }
 
         toast.success("Account created! Please check your email to verify.");
-        navigate("/dashboard");
+        setTimeout(() => {
+          isSubmittingRef.current = false;
+          navigate("/dashboard");
+        }, 100);
       } else {
         // Validate signin data
         const validation = signInSchema.safeParse({
@@ -137,12 +147,16 @@ export default function Auth() {
           return;
         }
 
+        isSubmittingRef.current = true;
         const { data: authData, error } = await supabase.auth.signInWithPassword({
           email: validation.data.email,
           password: validation.data.password,
         });
 
-        if (error) throw error;
+        if (error) {
+          isSubmittingRef.current = false;
+          throw error;
+        }
 
         // ── Check if user is suspended or banned ──────────────────────────
         const { data: profile } = await supabase
@@ -176,7 +190,7 @@ export default function Auth() {
         // gets kicked out by useSessionMonitor within 30 seconds.
         const sessionToken = crypto.randomUUID();
         localStorage.setItem("ch_session_token", sessionToken);
-        await supabase
+        const { error: updateError } = await supabase
           .from("profiles")
           .update({
             active_session_id: sessionToken,
@@ -184,8 +198,17 @@ export default function Auth() {
           })
           .eq("id", authData.user.id);
 
+        if (updateError) {
+          console.error("Failed to update active session ID:", updateError);
+          // We continue anyway, but it's good to log
+        }
+
         toast.success("Welcome back!");
-        navigate("/dashboard");
+        // Small buffer to ensure LocalStorage and DB are "settled" before Dashboard mounts
+        setTimeout(() => {
+          isSubmittingRef.current = false;
+          navigate("/dashboard");
+        }, 100);
       }
     } catch (error: any) {
       toast.error(error.message || "An error occurred");

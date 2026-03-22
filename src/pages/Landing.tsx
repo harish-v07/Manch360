@@ -39,7 +39,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <Navbar />
+      <Navbar showCart={false} />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-32 px-4 overflow-hidden border-b border-border/50 bg-background">

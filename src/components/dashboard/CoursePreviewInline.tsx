@@ -314,6 +314,7 @@ export default function CoursePreviewInline({ courseId, onBack }: CoursePreviewI
           className="w-full rounded-xl"
           style={isFullscreen ? { width: '100%', height: '100%', objectFit: 'contain' } : {}}
           key={contentUrl}
+          onContextMenu={(e) => e.preventDefault()}
         >
           <source src={contentUrl} type={`video/${fileExt}`} />
           Your browser does not support video playback.
@@ -323,11 +324,18 @@ export default function CoursePreviewInline({ courseId, onBack }: CoursePreviewI
 
     if (fileExt === 'pdf') {
       return (
-        <div className="w-full rounded-xl overflow-hidden border dark:border-zinc-800 bg-muted dark:bg-zinc-900">
+        <div className="w-full rounded-xl overflow-hidden border dark:border-zinc-800 bg-muted dark:bg-zinc-900 relative" style={isFullscreen ? { width: '100%', height: '100%' } : {}}>
           <iframe
             src={`${contentUrl}#toolbar=0&navpanes=0`}
-            className="w-full h-[600px]"
+            className="w-full"
+            style={{ height: isFullscreen ? '100%' : '600px', border: 'none' }}
             title={currentLesson.title}
+          />
+          {/* Transparent overlay to block right-click on PDF; leaves scrollbar accessible */}
+          <div
+            className="absolute top-0 left-0 bottom-0"
+            style={{ right: '16px', zIndex: 10 }}
+            onContextMenu={(e) => e.preventDefault()}
           />
         </div>
       );
@@ -574,7 +582,12 @@ export default function CoursePreviewInline({ courseId, onBack }: CoursePreviewI
               <div
                 ref={contentWrapperRef}
                 className="relative overflow-hidden rounded-2xl bg-black/5 dark:bg-black/20"
-                style={isFullscreen ? { background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' } : {}}
+                style={isFullscreen ? {
+                  background: currentLesson?.content_url?.toLowerCase().endsWith('.pdf') ? '#f5f5f5' : '#000',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '100%', height: '100%'
+                } : {}}
+                onContextMenu={(e) => e.preventDefault()}
               >
                 {renderContent()}
                 

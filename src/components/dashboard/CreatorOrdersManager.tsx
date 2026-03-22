@@ -88,10 +88,6 @@ export default function CreatorOrdersManager() {
             name,
             type
           ),
-          profiles!orders_user_id_fkey (
-            name,
-            email
-          ),
           shipments (
             awb_code,
             courier_name
@@ -102,7 +98,30 @@ export default function CreatorOrdersManager() {
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
-            setOrders((data as any) || []);
+
+            // Fetch buyer names from public_profiles (bypasses RLS)
+            const ordersList = (data as any[]) || [];
+            const buyerIds = [...new Set(ordersList.map(o => o.user_id).filter(Boolean))];
+            
+            let buyerMap: Record<string, { name: string; email: string }> = {};
+            if (buyerIds.length > 0) {
+                const { data: buyers } = await supabase
+                    .from("public_profiles")
+                    .select("id, name, email")
+                    .in("id", buyerIds);
+                
+                if (buyers) {
+                    buyerMap = Object.fromEntries(buyers.map(b => [b.id, { name: b.name, email: b.email }]));
+                }
+            }
+
+            // Merge buyer info into orders
+            const ordersWithBuyers = ordersList.map(o => ({
+                ...o,
+                profiles: buyerMap[o.user_id] || null
+            }));
+
+            setOrders(ordersWithBuyers);
         } catch (err: any) {
             console.error("Error fetching creator orders:", err);
             toast.error("Failed to load orders");
@@ -285,8 +304,7 @@ export default function CreatorOrdersManager() {
                                                     </span>
                                                 </div>
                                                 <p className="text-sm font-medium text-gray-500 dark:text-zinc-500">
-                                                    Buyer: <span className="font-bold dark:text-zinc-400">{buyer?.name || "Unknown"}</span>
-                                                    {buyer?.email && <span className="opacity-60 ml-3 whitespace-nowrap">({buyer.email})</span>}
+                                                    Buyer: <span className="font-bold dark:text-zinc-400">{addr?.fullName || buyer?.name || "Unknown"}</span>
                                                 </p>
                                             </div>
                                             <div className="flex flex-col items-end gap-2">

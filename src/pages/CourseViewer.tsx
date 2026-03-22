@@ -216,6 +216,7 @@ export default function CourseViewer() {
           className="w-full rounded-lg"
           style={isFullscreen ? { width: '100%', height: '100%', objectFit: 'contain' } : {}}
           key={contentUrl}
+          onContextMenu={(e) => e.preventDefault()}
         >
           <source src={contentUrl} type={`video/${fileExt}`} />
           Your browser does not support video playback.
@@ -225,11 +226,18 @@ export default function CourseViewer() {
 
     if (fileExt === 'pdf') {
       return (
-        <div className="w-full rounded-lg overflow-hidden border bg-muted">
+        <div className="w-full rounded-lg overflow-hidden border bg-muted relative" style={isFullscreen ? { width: '100%', height: '100%' } : {}}>
           <iframe
             src={`${contentUrl}#toolbar=0&navpanes=0`}
-            className="w-full h-[700px]"
+            className="w-full"
+            style={{ height: isFullscreen ? '100%' : '700px', border: 'none' }}
             title={currentLesson.title}
+          />
+          {/* Transparent overlay to block right-click on PDF; leaves scrollbar accessible */}
+          <div
+            className="absolute top-0 left-0 bottom-0"
+            style={{ right: '16px', zIndex: 10 }}
+            onContextMenu={(e) => e.preventDefault()}
           />
         </div>
       );
@@ -251,7 +259,7 @@ export default function CourseViewer() {
 
     if (['mp3', 'wav'].includes(fileExt)) {
       return (
-        <audio controls controlsList="nodownload" className="w-full">
+        <audio controls controlsList="nodownload" className="w-full" onContextMenu={(e) => e.preventDefault()}>
           <source src={contentUrl} type={`audio/${fileExt}`} />
           Your browser does not support audio playback.
         </audio>
@@ -324,7 +332,12 @@ export default function CourseViewer() {
                 <div
                   ref={contentWrapperRef}
                   className="relative overflow-hidden rounded-lg"
-                  style={isFullscreen ? { background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' } : {}}
+                  style={isFullscreen ? {
+                    background: currentLesson?.content_url?.toLowerCase().endsWith('.pdf') ? '#f5f5f5' : '#000',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '100%', height: '100%'
+                  } : {}}
+                  onContextMenu={(e) => e.preventDefault()}
                 >
                   {renderContent()}
                   {showWatermark && creatorName && (

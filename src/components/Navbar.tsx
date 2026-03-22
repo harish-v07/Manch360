@@ -7,7 +7,11 @@ import { Session } from "@supabase/supabase-js";
 import { ThemeToggle } from "./ThemeToggle";
 import { Cart } from "./Cart";
 
-export const Navbar = () => {
+interface NavbarProps {
+  showCart?: boolean;
+}
+
+export const Navbar = ({ showCart = true }: NavbarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isResetPasswordPage = location.pathname === "/reset-password";
@@ -72,7 +76,7 @@ export const Navbar = () => {
             </div>
             
             <ThemeToggle />
-            <Cart />
+            {showCart && <Cart />}
             
             {session && !isResetPasswordPage ? (
               <div className="flex items-center gap-2">

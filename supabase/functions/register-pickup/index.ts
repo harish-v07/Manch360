@@ -88,8 +88,9 @@ serve(async (req) => {
             });
         }
 
-        // Generate a unique pickup location name for this seller
-        const pickupName = `seller_${user.id.substring(0, 8)}`;
+        // Generate a clean pickup location name from the seller's contact name
+        const cleanName = contactName.replace(/[^a-zA-Z0-9_ ]/g, '').trim().replace(/\s+/g, '_').substring(0, 30);
+        const pickupName = cleanName || `seller_${user.id.substring(0, 8)}`;
 
         // Authorize with Shiprocket
         const token = await getShiprocketToken();

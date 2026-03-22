@@ -219,7 +219,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <Navbar />
+      <Navbar showCart={false} />
       <div className="container mx-auto px-4 pt-32 pb-20">
         <Card className="max-w-md mx-auto shadow-hover">
           <CardHeader>

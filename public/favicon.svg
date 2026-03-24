@@ -1,15 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#a855f7"/>
-      <stop offset="100%" style="stop-color:#2dd4bf"/>
-    </linearGradient>
-  </defs>
-  <!-- Dark background -->
-  <rect width="64" height="64" rx="12" fill="#0f0720"/>
-  <!-- Bold "M" letter for Manch360 -->
+  <!-- Black background -->
+  <rect width="64" height="64" rx="12" fill="#000000"/>
+  <!-- Bold "M" letter for Manch360 in white -->
   <text x="32" y="46" font-family="'Arial Black', Arial, sans-serif" font-size="42" font-weight="900"
-        text-anchor="middle" fill="url(#grad)">M</text>
-  <!-- Brand accent dot -->
-  <circle cx="48" cy="20" r="5" fill="#2dd4bf" opacity="0.9"/>
+        text-anchor="middle" fill="#ffffff">M</text>
+  <!-- Brand accent dot in white -->
+  <circle cx="48" cy="20" r="5" fill="#ffffff" opacity="0.9"/>
 </svg>

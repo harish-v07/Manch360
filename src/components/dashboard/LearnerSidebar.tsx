@@ -40,17 +40,11 @@ export function LearnerSidebar({ activeTab, onTabChange, isAdmin }: LearnerSideb
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-16 flex flex-col bg-white dark:bg-zinc-950 border-r border-gray-100 dark:border-zinc-900 transition-all duration-500 z-50">
-      {/* Branding */}
       <div className="h-16 flex items-center justify-center p-2">
         <img 
-          src="/logo-white.jpeg" 
+          src="/logo.png" 
           alt="Manch360" 
-          className="h-full w-auto block dark:hidden object-contain"
-        />
-        <img 
-          src="/logo-dark.jpeg" 
-          alt="Manch360" 
-          className="h-full w-auto hidden dark:block object-contain"
+          className="h-full w-auto object-contain"
         />
       </div>
 

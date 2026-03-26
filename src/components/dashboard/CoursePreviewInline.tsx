@@ -552,20 +552,20 @@ export default function CoursePreviewInline({ courseId, onBack }: CoursePreviewI
           Back to Courses
         </Button>
         <div className="flex items-center gap-6">
-          {hideEnroll ? (
-            <div className="flex items-center gap-2 px-6 py-3 bg-primary/10 text-primary rounded-2xl border border-primary/20 font-black text-sm uppercase tracking-widest shadow-sm">
-              <User className="h-4 w-4" />
-              {isOwner ? "Course Owner" : "Creator Account"}
-            </div>
-          ) : isEnrolled ? (
-            <div className="flex items-center gap-2 px-6 py-3 bg-emerald-500/10 text-emerald-500 rounded-2xl border border-emerald-500/20 font-black text-sm uppercase tracking-widest">
-              <CheckCircle2 className="h-4 w-4" />
-              Already Enrolled
-            </div>
-          ) : null}
           <div className="text-right">
             <h2 className="text-xl font-black dark:text-white tracking-tight">{course?.title}</h2>
             <p className="text-xs text-primary font-bold uppercase tracking-widest">{course?.category}</p>
+            {creatorName && (
+              <a
+                href={`/creator/${course?.creator_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 mt-1.5 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+              >
+                <User className="h-3.5 w-3.5" />
+                {creatorName}
+              </a>
+            )}
           </div>
         </div>
       </div>

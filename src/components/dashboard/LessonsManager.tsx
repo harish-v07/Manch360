@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Trash2, ArrowLeft, Upload, FileText } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Upload, FileText, GripVertical } from "lucide-react";
 import { uploadToS3 } from "@/lib/s3-upload";
 
 export default function LessonsManager() {
@@ -23,6 +23,8 @@ export default function LessonsManager() {
     title: "",
     file: null as File | null,
   });
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCourseAndLessons();
@@ -106,6 +108,52 @@ export default function LessonsManager() {
       toast.success("Lesson deleted");
       fetchCourseAndLessons();
     }
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = async (targetIndex: number) => {
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const reordered = [...lessons];
+    const [moved] = reordered.splice(draggedIndex, 1);
+    reordered.splice(targetIndex, 0, moved);
+
+    setLessons(reordered);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+
+    // Persist new order to Supabase
+    try {
+      const updates = reordered.map((lesson, i) =>
+        supabase.from("lessons").update({ order_index: i }).eq("id", lesson.id)
+      );
+      await Promise.all(updates);
+      toast.success("Lesson order updated");
+    } catch (error) {
+      toast.error("Failed to save lesson order");
+      fetchCourseAndLessons();
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   if (loading) {
@@ -192,19 +240,37 @@ export default function LessonsManager() {
       ) : (
         <div className="space-y-4">
           {lessons.map((lesson, index) => (
-            <Card key={lesson.id} className="shadow-soft hover:shadow-hover transition-all">
+            <Card
+              key={lesson.id}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={() => handleDrop(index)}
+              onDragEnd={handleDragEnd}
+              className={`shadow-soft hover:shadow-hover transition-all cursor-grab active:cursor-grabbing ${
+                draggedIndex === index ? "opacity-40 scale-95" : ""
+              } ${
+                dragOverIndex === index && draggedIndex !== index
+                  ? "border-primary border-2 shadow-lg shadow-primary/10"
+                  : ""
+              }`}
+            >
               <CardHeader>
                 <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-muted-foreground">
-                        Lesson {index + 1}
-                      </span>
-                      <CardTitle className="text-lg">{lesson.title}</CardTitle>
+                  <div className="flex items-center gap-3 flex-1">
+                    <GripVertical className="h-5 w-5 text-muted-foreground shrink-0 cursor-grab active:cursor-grabbing" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Lesson {index + 1}
+                        </span>
+                        <CardTitle className="text-lg">{lesson.title}</CardTitle>
+                      </div>
+                      <CardDescription className="mt-2">
+                        {lesson.content_url?.split('.').pop()?.toUpperCase()} File
+                      </CardDescription>
                     </div>
-                    <CardDescription className="mt-2">
-                      {lesson.content_url?.split('.').pop()?.toUpperCase()} File
-                    </CardDescription>
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>

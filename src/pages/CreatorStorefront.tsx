@@ -469,7 +469,7 @@ export default function CreatorStorefront() {
                       <CardContent className="pt-4 pb-8 px-6">
                         <Button
                           variant="outline"
-                          className="w-full h-12 rounded-[1.25rem] border-gray-100 dark:border-zinc-800 font-bold text-sm text-primary hover:bg-primary/5 hover:border-primary/20 transition-all dark:text-primary"
+                          className="w-full h-12 rounded-[1.25rem] border-gray-100 dark:border-zinc-800 font-bold text-sm text-primary hover:bg-primary/5 hover:text-primary hover:border-primary/20 transition-all dark:text-primary dark:hover:text-primary"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/product/${product.id}`);

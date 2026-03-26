@@ -94,8 +94,8 @@ export default function ExploreInline({ onViewStorefront }: ExploreInlineProps) 
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredCreators.map((creator) => (
-            <Card key={creator.id} className="group overflow-hidden border-none shadow-soft hover:shadow-hover transition-all hover:scale-[1.02] rounded-[2rem] bg-white dark:bg-zinc-900/40 backdrop-blur-sm">
-              <div className="relative h-32 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-zinc-800 dark:to-zinc-900 overflow-hidden">
+            <Card key={creator.id} className="group overflow-hidden border-none shadow-soft hover:shadow-hover transition-all hover:scale-[1.02] rounded-[2rem] bg-white dark:bg-zinc-900/40 backdrop-blur-sm flex flex-col h-full">
+              <div className="relative h-32 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-zinc-800 dark:to-zinc-900 overflow-hidden flex-shrink-0">
                 {creator.banner_url && (
                   <S3Media
                     src={creator.banner_url}
@@ -133,18 +133,20 @@ export default function ExploreInline({ onViewStorefront }: ExploreInlineProps) 
                   </CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-col flex-1">
                 <p className="text-sm text-gray-500 dark:text-zinc-500 mb-6 line-clamp-2 font-medium min-h-[40px] leading-relaxed">
                   {creator.bio || "Crafting digital experiences and sharing knowledge with the community."}
                 </p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleViewStorefront(creator.id)}
-                  className="w-full h-11 rounded-2xl border-gray-100 dark:border-zinc-800 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-primary dark:hover:border-primary hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 font-bold gap-2"
-                >
-                  View Storefront
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </Button>
+                <div className="mt-auto">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleViewStorefront(creator.id)}
+                    className="w-full h-11 rounded-2xl border-gray-100 dark:border-zinc-800 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-primary dark:hover:border-primary hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 font-bold gap-2"
+                  >
+                    View Storefront
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

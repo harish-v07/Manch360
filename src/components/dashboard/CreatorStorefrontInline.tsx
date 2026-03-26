@@ -137,17 +137,17 @@ export default function CreatorStorefrontInline({ creatorId, onBack }: CreatorSt
 
       <Tabs defaultValue="courses" className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
-          <TabsList className="bg-gray-100/50 dark:bg-zinc-900/50 p-1.5 rounded-2xl border border-gray-100 dark:border-zinc-800 h-auto">
+          <TabsList className="bg-gray-100/80 dark:bg-zinc-900/80 p-1.5 rounded-[2rem] border border-gray-100 dark:border-zinc-800 h-auto gap-1">
             <TabsTrigger 
               value="courses" 
-              className="px-8 py-3 rounded-xl font-black text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex items-center gap-2"
+              className="px-10 py-3.5 rounded-[1.5rem] font-bold text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-primary data-[state=active]:shadow-md transition-all flex items-center gap-2.5 text-muted-foreground"
             >
               <BookOpen className="h-4 w-4" />
               Courses
             </TabsTrigger>
             <TabsTrigger 
               value="products" 
-              className="px-8 py-3 rounded-xl font-black text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex items-center gap-2"
+              className="px-10 py-3.5 rounded-[1.5rem] font-bold text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-primary data-[state=active]:shadow-md transition-all flex items-center gap-2.5 text-muted-foreground"
             >
               <Package className="h-4 w-4" />
               Products
@@ -203,25 +203,25 @@ export default function CreatorStorefrontInline({ creatorId, onBack }: CreatorSt
               <p className="text-gray-500 dark:text-zinc-500 font-bold">No products available yet.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {products.map((product) => (
-                <Card key={product.id} className="overflow-hidden shadow-soft hover:shadow-hover dark:bg-zinc-900/40 dark:border-zinc-800 transition-all border-gray-100 rounded-[2rem] group">
+                <Card key={product.id} className="overflow-hidden shadow-soft hover:shadow-hover dark:bg-zinc-900/40 dark:border-zinc-800 transition-all border-gray-100 rounded-[2.5rem] group border-none">
                    {product.media_urls && product.media_urls.length > 0 && (
                     <div className="aspect-square relative overflow-hidden bg-black/5 dark:bg-black/20">
                       <S3Media src={product.media_urls[0]} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" controls={false} />
                     </div>
                   )}
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base font-bold truncate">{product.name}</CardTitle>
-                    <div className="flex justify-between items-center mt-1">
-                      <span className="text-lg font-black text-primary">₹{product.price}</span>
-                      <span className="text-[10px] uppercase font-black tracking-widest opacity-50">{product.type}</span>
+                  <CardHeader className="pb-2 pt-6 px-6">
+                    <CardTitle className="text-xl font-bold dark:text-white leading-tight mb-2">{product.name}</CardTitle>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xl font-black text-primary">₹{product.price}</span>
+                      <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground opacity-70">{product.type}</span>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-2 pb-6">
+                  <CardContent className="pt-4 pb-8 px-6">
                     <Button 
                       variant="outline" 
-                      className="w-full h-10 rounded-xl border-gray-100 dark:border-zinc-800 font-bold text-xs"
+                      className="w-full h-12 rounded-[1.25rem] border-gray-100 dark:border-zinc-800 font-bold text-sm text-primary hover:bg-primary/5 hover:border-primary/20 transition-all dark:text-primary dark:hover:bg-primary/10"
                       onClick={() => {
                         setSelectedId(product.id);
                         setActiveSubView("product");

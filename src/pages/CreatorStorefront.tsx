@@ -368,10 +368,22 @@ export default function CreatorStorefront() {
           </div>
 
           <Tabs defaultValue="courses" className="mb-12">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="courses">Courses</TabsTrigger>
-              <TabsTrigger value="products">Products</TabsTrigger>
-            </TabsList>
+            <div className="flex justify-center mb-10">
+              <TabsList className="bg-gray-100/80 dark:bg-zinc-900/80 p-1.5 rounded-[2rem] border border-gray-100 dark:border-zinc-800 h-auto gap-1">
+                <TabsTrigger 
+                  value="courses"
+                  className="px-12 py-3.5 rounded-[1.5rem] font-bold text-base data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-primary data-[state=active]:shadow-md transition-all text-muted-foreground"
+                >
+                  Courses
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="products"
+                  className="px-12 py-3.5 rounded-[1.5rem] font-bold text-base data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-primary data-[state=active]:shadow-md transition-all text-muted-foreground"
+                >
+                  Products
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="courses" className="mt-8">
               {courses.length === 0 ? (
@@ -425,58 +437,45 @@ export default function CreatorStorefront() {
               )}
             </TabsContent>
 
-            <TabsContent value="products" className="mt-8">
+            <TabsContent value="products" className="mt-0 outline-none">
               {products.length === 0 ? (
-                <Card className="shadow-soft">
-                  <CardContent className="py-12 text-center">
-                    <p className="text-muted-foreground">No products available yet</p>
+                <Card className="shadow-soft border-none bg-white dark:bg-zinc-900/40 backdrop-blur-sm rounded-[2.5rem]">
+                  <CardContent className="py-20 text-center">
+                    <p className="text-muted-foreground font-bold text-lg">No products available yet</p>
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                   {products.map((product) => (
                     <Card
                       key={product.id}
-                      className="shadow-soft hover:shadow-hover transition-all cursor-pointer"
+                      className="group overflow-hidden border-none shadow-soft hover:shadow-hover dark:bg-zinc-900/40 transition-all rounded-[2.5rem] bg-white cursor-pointer"
                       onClick={() => navigate(`/product/${product.id}`)}
                     >
                       {product.media_urls && product.media_urls.length > 0 && (
-                        <div className="aspect-square w-full overflow-hidden rounded-t-lg">
-                          <S3Media src={product.media_urls[0]} alt={product.name} className="w-full h-full object-cover" controls={false} />
+                        <div className="aspect-square w-full overflow-hidden relative">
+                          <S3Media src={product.media_urls[0]} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" controls={false} />
                         </div>
                       )}
-                      <CardHeader>
-                        <CardTitle className="text-lg">{product.name}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                          {product.description}
-                        </p>
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-xl font-bold text-primary">₹{product.price}</span>
-                          <span className="px-3 py-1 rounded-full text-xs bg-secondary text-secondary-foreground">
+                      <CardHeader className="pt-6 px-6 pb-2">
+                        <CardTitle className="text-xl font-bold dark:text-white leading-tight mb-2 truncate">{product.name}</CardTitle>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xl font-black text-primary">₹{product.price}</span>
+                          <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground opacity-70">
                             {product.type}
                           </span>
                         </div>
-                        {product.media_urls && product.media_urls.length > 1 && (
-                          <p className="text-xs text-muted-foreground mb-2">+{product.media_urls.length - 1} more images</p>
-                        )}
+                      </CardHeader>
+                      <CardContent className="pt-4 pb-8 px-6">
                         <Button
-                          variant="secondary"
-                          className="w-full"
+                          variant="outline"
+                          className="w-full h-12 rounded-[1.25rem] border-gray-100 dark:border-zinc-800 font-bold text-sm text-primary hover:bg-primary/5 hover:border-primary/20 transition-all dark:text-primary"
                           onClick={(e) => {
                             e.stopPropagation();
-                            addItem({
-                              id: product.id,
-                              name: product.name,
-                              price: Number(product.price),
-                              type: product.type,
-                              description: product.description,
-                              image_url: product.media_urls?.[0] || '',
-                            });
+                            navigate(`/product/${product.id}`);
                           }}
                         >
-                          Add to Cart
+                          View Details
                         </Button>
                       </CardContent>
                     </Card>

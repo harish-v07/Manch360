@@ -4,7 +4,7 @@ import {
   BookOpen, 
   Settings, 
   LogOut,
-  Compass,
+  Heart,
   ShoppingBag,
   ShoppingCart,
   Shield
@@ -33,7 +33,7 @@ export function LearnerSidebar({ activeTab, onTabChange, isAdmin }: LearnerSideb
   const navItems = [
     { id: "dashboard", icon: LayoutDashboard, label: "My Learning" },
     { id: "orders", icon: ShoppingBag, label: "My Orders" },
-    { id: "explore", icon: Compass, label: "Explore" },
+    { id: "subscriptions", icon: Heart, label: "Subscriptions" },
     { id: "cart", icon: ShoppingCart, label: "Cart" },
     ...(isAdmin ? [{ id: "admin", icon: Shield, label: "Admin" }] : []),
   ];

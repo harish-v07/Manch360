@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LearnerSidebar } from "./LearnerSidebar";
 import LearnerOrdersManager from "./LearnerOrdersManager";
-import ExploreInline from "./ExploreInline";
+import SubscriptionsInline from "./SubscriptionsInline";
 import LearnerCartInline from "./LearnerCartInline";
 import CoursePreviewInline from "./CoursePreviewInline";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -35,7 +35,7 @@ export default function LearnerDashboard({ activeTab, onTabChange, isAdmin, view
     activeTab === "dashboard" && viewId ? viewId : null
   );
   const [viewingStorefrontId, setViewingStorefrontIdInternal] = useState<string | null>(
-    activeTab === "explore" && viewId ? viewId : null
+    activeTab === "subscriptions" && viewId ? viewId : null
   );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [previousTab, setPreviousTab] = useState("dashboard");
@@ -140,10 +140,10 @@ export default function LearnerDashboard({ activeTab, onTabChange, isAdmin, view
                   <h3 className="text-xl font-bold mb-2 dark:text-white">No courses yet</h3>
                   <p className="text-muted-foreground mb-8 max-w-sm mx-auto">You haven't enrolled in any courses yet. Start your journey today!</p>
                   <Button 
-                    onClick={() => onTabChange("explore")}
+                    onClick={() => onTabChange("subscriptions")}
                     className="rounded-2xl h-12 px-8 font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20"
                   >
-                    Discover Courses
+                    My Subscriptions
                   </Button>
                 </CardContent>
               </Card>
@@ -204,11 +204,11 @@ export default function LearnerDashboard({ activeTab, onTabChange, isAdmin, view
             )}
           </div>
         );
-      case "explore":
+      case "subscriptions":
         if (viewingStorefrontId) {
           return <CreatorStorefrontInline creatorId={viewingStorefrontId} onBack={() => setViewingStorefrontId(null)} />;
         }
-        return <ExploreInline onViewStorefront={(id) => setViewingStorefrontId(id)} />;
+        return <SubscriptionsInline onViewStorefront={(id) => setViewingStorefrontId(id)} />;
       case "cart":
         return <LearnerCartInline />;
       case "orders":

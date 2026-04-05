@@ -9,9 +9,11 @@ import { Cart } from "./Cart";
 
 interface NavbarProps {
   showCart?: boolean;
+  hideExplore?: boolean;
+  minimal?: boolean;
 }
 
-export const Navbar = ({ showCart = true }: NavbarProps) => {
+export const Navbar = ({ showCart = true, hideExplore = false, minimal = false }: NavbarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isResetPasswordPage = location.pathname === "/reset-password";
@@ -69,22 +71,26 @@ export const Navbar = ({ showCart = true }: NavbarProps) => {
           </Link>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <div className="hidden md:flex items-center gap-1 mr-2">
-              <Link to="/explore">
-                <Button variant="ghost" className="font-semibold text-sm">Explore</Button>
-              </Link>
-            </div>
+            {!hideExplore && (
+              <div className="hidden md:flex items-center gap-1 mr-2">
+                <Link to="/explore">
+                  <Button variant="ghost" className="font-semibold text-sm">Explore</Button>
+                </Link>
+              </div>
+            )}
             
-            <ThemeToggle />
-            {showCart && <Cart />}
+            {!minimal && <ThemeToggle />}
+            {showCart && !minimal && <Cart />}
             
             {session && !isResetPasswordPage ? (
               <div className="flex items-center gap-2">
-                <Link to="/my-orders" className="hidden sm:block">
-                  <Button variant="ghost" className="font-semibold">
-                    My Orders
-                  </Button>
-                </Link>
+                {!minimal && (
+                  <Link to="/my-orders" className="hidden sm:block">
+                    <Button variant="ghost" className="font-semibold">
+                      My Orders
+                    </Button>
+                  </Link>
+                )}
                 <Link to="/dashboard" className="hidden sm:block">
                   <Button variant="ghost" className="font-semibold">
                     Dashboard

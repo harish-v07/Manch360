@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, BookOpen, Eye, Users, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Plus, Edit, Trash2, BookOpen, Eye, Users, Upload, X, Image as ImageIcon, Search } from "lucide-react";
 import { uploadToS3 } from "@/lib/s3-upload";
 import { useS3Url } from "@/hooks/useS3Url";
 import { S3Media } from "@/components/S3Media";
@@ -29,6 +29,7 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
   const [courses, setCourses] = useState<any[]>([]);
   const [courseLearners, setCourseLearners] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [internalDialogOpen, setInternalDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -378,8 +379,20 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 transition-all duration-500">
-          {courses.map((course) => (
+        <>
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search courses..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-11 h-12 rounded-2xl bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 font-medium"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 transition-all duration-500">
+          {courses.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()) || c.category?.toLowerCase().includes(searchQuery.toLowerCase())).map((course) => (
             <Card key={course.id} className="shadow-soft hover:shadow-hover dark:bg-zinc-900/40 dark:border-zinc-800/50 backdrop-blur-sm transition-all group overflow-hidden rounded-2xl flex flex-col">
               <div className="h-32 bg-zinc-800 relative overflow-hidden shrink-0">
                 {course.thumbnail_url ? (
@@ -476,6 +489,7 @@ export default function CoursesManager({ onCourseChange, isAddDialogOpen, onAddD
             </Card>
           ))}
         </div>
+        </>
       )}
     </div>
   );

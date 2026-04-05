@@ -6,7 +6,6 @@ import {
   IndianRupee, 
   Settings, 
   LogOut,
-  Compass,
   ShoppingBag,
   Shield
 } from "lucide-react";
@@ -35,7 +34,6 @@ export function CreatorSidebar({ activeTab, onTabChange, isAdmin }: CreatorSideb
     { id: "products", icon: Package, label: "Products" },
     { id: "orders", icon: ShoppingBag, label: "Orders" },
     { id: "earnings", icon: IndianRupee, label: "Earnings" },
-    { id: "explore", icon: Compass, label: "Explore" },
     ...(isAdmin ? [{ id: "admin", icon: Shield, label: "Admin" }] : []),
   ];
 

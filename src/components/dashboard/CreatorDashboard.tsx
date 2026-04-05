@@ -22,7 +22,7 @@ import ProductsManager from "./ProductsManager";
 import EarningsManager from "./EarningsManager";
 import { CreatorSidebar } from "./CreatorSidebar";
 import CreatorSettings from "./CreatorSettings";
-import ExploreInline from "./ExploreInline";
+
 import {
   Popover,
   PopoverContent,
@@ -32,7 +32,7 @@ import CreatorOrdersManager from "./CreatorOrdersManager";
 import AdminDashboardInline from "./AdminDashboardInline";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import CoursePreviewInline from "./CoursePreviewInline";
-import CreatorStorefrontInline from "./CreatorStorefrontInline";
+
 
 interface CreatorDashboardProps {
   activeTab?: string;
@@ -54,19 +54,12 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
   const [previewCourseId, setPreviewCourseIdInternal] = useState<string | null>(
     activeTab === "courses" && viewId ? viewId : null
   );
-  const [previewCreatorId, setPreviewCreatorIdInternal] = useState<string | null>(
-    activeTab === "explore" && viewId ? viewId : null
-  );
 
   const setPreviewCourseId = (id: string | null) => {
     setPreviewCourseIdInternal(id);
     onViewIdChange?.(id);
   };
 
-  const setPreviewCreatorId = (id: string | null) => {
-    setPreviewCreatorIdInternal(id);
-    onViewIdChange?.(id);
-  };
 
   const [stats, setStats] = useState({
     totalCourses: 0,
@@ -110,7 +103,6 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
   useEffect(() => {
     if (tabClickCounter && tabClickCounter > 0) {
       setPreviewCourseIdInternal(null);
-      setPreviewCreatorIdInternal(null);
     }
   }, [tabClickCounter]);
 
@@ -203,31 +195,26 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
       <main className="flex-1 ml-16 transition-all duration-300">
         <div className="max-w-[1240px] mx-auto px-6 md:px-10 py-10 lg:py-12">
           {/* Header Section - hidden on explore tab since ExploreInline has its own */}
-          {activeTab !== "explore" && (
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-12 px-2">
             <div className="flex-1 min-w-0">
              <h1 className="text-3xl md:text-4xl font-black text-black dark:text-white tracking-tight transition-all duration-500 overflow-hidden text-ellipsis whitespace-nowrap">
               {previewCourseId ? "Course Preview" :
-               previewCreatorId ? "Storefront Preview" :
                activeTab === "dashboard" ? `Welcome back, ${profile?.name || 'Creator'}` : 
                activeTab === "courses" ? "Courses Manager" : 
                activeTab === "products" ? "Products Store" : 
                activeTab === "orders" ? "Sales & Orders" : 
-               activeTab === "earnings" ? "Revenue Analytics" : 
-               activeTab === "explore" ? "Creator Network" : "Settings"}
+               activeTab === "earnings" ? "Revenue Analytics" : "Settings"}
             </h1>
             <p className="text-base md:text-lg text-gray-500 dark:text-zinc-500 font-medium transition-colors mt-1">
                 {previewCourseId ? "Review your course content as it appears to learners." :
-                 previewCreatorId ? "Preview how this storefront appears to the community." :
                  activeTab === "dashboard" ? "Here's what's happening today." : 
-                 activeTab === "explore" ? "Connect with other creators and browse the marketplace." :
                  `Manage your ${activeTab} content and track performance.`}
               </p>
             </div>
             
             <div className="flex items-center gap-3">
               {/* Hide these buttons in preview mode */}
-              {!previewCourseId && !previewCreatorId && (
+              {!previewCourseId && (
                 <>
                   {/* Only show Share button on Dashboard tab */}
                   {activeTab === "dashboard" && (
@@ -276,7 +263,6 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
               )}
             </div>
           </div>
-          )}
 
           {/* Stats Section - ONLY visible on Dashboard tab and NOT in preview mode */}
           {activeTab === "dashboard" && !previewCourseId && (
@@ -322,18 +308,7 @@ export default function CreatorDashboard({ activeTab: propsActiveTab, onTabChang
               </TabsContent>
               <TabsContent value="orders" className="mt-0 outline-none"><CreatorOrdersManager /></TabsContent>
               <TabsContent value="earnings" className="mt-0 outline-none"><EarningsManager /></TabsContent>
-              <TabsContent value="explore" className="mt-0 outline-none">
-                {previewCreatorId ? (
-                  <CreatorStorefrontInline 
-                    creatorId={previewCreatorId} 
-                    onBack={() => setPreviewCreatorId(null)} 
-                  />
-                ) : (
-                  <ExploreInline 
-                    onViewStorefront={(id) => setPreviewCreatorId(id)}
-                  />
-                )}
-              </TabsContent>
+
               <TabsContent value="admin" className="mt-0 outline-none">
                 <AdminDashboardInline />
               </TabsContent>

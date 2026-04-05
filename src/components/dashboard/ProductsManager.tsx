@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Upload, X, BookOpen, Eye, Users } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, X, BookOpen, Eye, Users, Search } from "lucide-react";
 import { productSchema } from "@/lib/validation";
 import { uploadToS3 } from "@/lib/s3-upload";
 import { S3Media } from "@/components/S3Media";
@@ -57,6 +57,7 @@ export default function ProductsManager({
 }: ProductsManagerProps) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [internalDialogOpen, setInternalDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -613,8 +614,20 @@ export default function ProductsManager({
           </CardContent>
         </Card>
       ) : (
+        <>
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-11 h-12 rounded-2xl bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 font-medium"
+            />
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 transition-all duration-500">
-          {products.map((product) => (
+          {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.type?.toLowerCase().includes(searchQuery.toLowerCase())).map((product) => (
             <Card
               key={product.id}
               className="shadow-soft hover:shadow-hover dark:bg-zinc-900/40 dark:border-zinc-800/50 backdrop-blur-sm transition-all group overflow-hidden rounded-2xl"
@@ -692,6 +705,7 @@ export default function ProductsManager({
             </Card>
           ))}
         </div>
+        </>
       )}
     </div>
   );

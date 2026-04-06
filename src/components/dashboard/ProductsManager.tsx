@@ -74,6 +74,7 @@ export default function ProductsManager({
     media_urls: [] as string[],
     file_url: "",
     usage_instructions: "",
+    weight: "0.5",
   });
 
   const dialogOpen = isAddDialogOpen !== undefined ? isAddDialogOpen : internalDialogOpen;
@@ -204,6 +205,7 @@ export default function ProductsManager({
         media_urls: allMediaUrls,
         file_url: finalFileUrl || "",
         usage_instructions: formData.usage_instructions || "",
+        weight: parseFloat(formData.weight) || 0.5,
       });
 
       if (!validation.success) {
@@ -229,6 +231,7 @@ export default function ProductsManager({
             media_urls: allMediaUrls,
             file_url: finalFileUrl,
             usage_instructions: validation.data.usage_instructions,
+            weight: validation.data.weight,
           })
           .eq("id", editingProduct.id);
 
@@ -254,6 +257,7 @@ export default function ProductsManager({
             media_urls: allMediaUrls,
             file_url: finalFileUrl,
             usage_instructions: validation.data.usage_instructions,
+            weight: validation.data.weight,
           },
         ]);
 
@@ -286,6 +290,7 @@ export default function ProductsManager({
       media_urls: [],
       file_url: "",
       usage_instructions: "",
+      weight: "0.5",
     });
     setMediaFiles([]);
     setMediaPreviews([]);
@@ -305,6 +310,7 @@ export default function ProductsManager({
       media_urls: product.media_urls || [],
       file_url: product.file_url || "",
       usage_instructions: product.usage_instructions || "",
+      weight: product.weight?.toString() || "0.5",
     });
     setExistingMediaUrls(product.media_urls || []);
     setMediaFiles([]);
@@ -463,6 +469,36 @@ export default function ProductsManager({
                     placeholder="Instructions for the buyer..."
                     rows={3}
                     className="dark:bg-zinc-900 dark:border-zinc-800 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+            )}
+
+            {formData.type === "physical" && (
+              <div className="space-y-4 border rounded-xl p-3 bg-muted/30 dark:bg-zinc-900/50 dark:border-zinc-800 transition-colors">
+                <h3 className="font-bold text-[10px] dark:text-zinc-200 uppercase tracking-widest">
+                  Physical Product Details
+                </h3>
+
+                <div className="space-y-2">
+                  <Label htmlFor="weight" className="text-xs dark:text-zinc-300 uppercase tracking-widest font-bold">
+                    Package Weight (kg)
+                  </Label>
+                  <p className="text-[10px] text-muted-foreground dark:text-zinc-500 mb-1">
+                    Used to calculate accurate shipping rates via Shiprocket.
+                  </p>
+                  <Input
+                    id="weight"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max="1000"
+                    value={formData.weight}
+                    onChange={(e) =>
+                      setFormData({ ...formData, weight: e.target.value })
+                    }
+                    required
+                    className="h-11 dark:bg-zinc-900 dark:border-zinc-800 rounded-xl"
                   />
                 </div>
               </div>

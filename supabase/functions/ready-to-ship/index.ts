@@ -46,7 +46,7 @@ serve(async (req) => {
             .select(`
                 id,
                 shipment_status,
-                products ( creator_id ),
+                products ( creator_id, weight ),
                 shipments ( shiprocket_order_id, shiprocket_shipment_id, awb_code, courier_name )
             `)
             .eq('id', order_id)
@@ -117,7 +117,7 @@ serve(async (req) => {
             
             const deliveryPostcode = deliveryAddr.pincode;
             const pickupPostcode = pickupAddr.pincode || "641030"; // Fallback to Coimbatore
-            const weight = 0.5;
+            const weight = order.products.weight || 0.5;
             const isCod = 0;
 
             // Use shipment_id instead of order_id to avoid "Order doesn't exist"

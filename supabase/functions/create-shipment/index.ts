@@ -60,7 +60,8 @@ serve(async (req) => {
                     name,
                     creator_id,
                     price,
-                    description
+                    description,
+                    weight
                 )
             `)
             .eq('id', order_id)
@@ -162,7 +163,7 @@ serve(async (req) => {
             length: 10,
             breadth: 10,
             height: 10,
-            weight: 0.5 
+            weight: order.products.weight || 0.5 
         };
 
         console.log("Creating Shiprocket Order with payload:", srOrderPayload);

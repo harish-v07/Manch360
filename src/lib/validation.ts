@@ -96,7 +96,12 @@ export const productSchema = z.object({
     .trim()
     .max(5000, 'Instructions must be less than 5000 characters')
     .optional()
-    .or(z.literal(''))
+    .or(z.literal('')),
+  weight: z.number()
+    .min(0.01, 'Weight must be greater than 0')
+    .max(1000, 'Weight must be less than 1000 kg')
+    .optional()
+    .default(0.5)
 });
 
 // Profile validation

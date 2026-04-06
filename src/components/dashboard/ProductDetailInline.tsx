@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Package, User, CreditCard, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Package, User, CreditCard, MapPin, Truck, Loader2 } from "lucide-react";
 import { S3Media } from "@/components/S3Media";
 import { useCart } from "@/hooks/useCart";
 
@@ -36,9 +36,79 @@ export default function ProductDetailInline({ productId, onBack }: ProductDetail
     pincode: "",
   });
 
+  // Shipping rate state
+  const [shippingRate, setShippingRate] = useState<{
+    shipping_charge: number;
+    courier_name: string;
+    estimated_delivery_days: string | null;
+    estimated_delivery_date: string | null;
+    is_recommended: boolean;
+  } | null>(null);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  const [shippingError, setShippingError] = useState<string | null>(null);
+
   const isOwner = userId && product && userId === product.creator_id;
   const isCreator = userRole === 'creator';
   const hidePurchase = isOwner || isCreator;
+  const isPhysical = product?.type === "physical";
+
+  // Auto-fetch shipping rate when pincode is 6 digits
+  const fetchShippingRate = useCallback(async (pincode: string) => {
+    if (!pincode || pincode.length !== 6 || !product?.id || !isPhysical) return;
+    
+    setShippingLoading(true);
+    setShippingError(null);
+    setShippingRate(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/check-shipping-rate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || supabaseKey}`,
+          'apikey': supabaseKey,
+        },
+        body: JSON.stringify({
+          product_id: product.id,
+          delivery_pincode: pincode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        setShippingError(data.error || 'Unable to calculate shipping');
+        return;
+      }
+
+      setShippingRate({
+        shipping_charge: data.shipping_charge,
+        courier_name: data.courier_name,
+        estimated_delivery_days: data.estimated_delivery_days,
+        estimated_delivery_date: data.estimated_delivery_date,
+        is_recommended: data.is_recommended,
+      });
+    } catch (err: any) {
+      console.error('Shipping rate fetch error:', err);
+      setShippingError('Failed to calculate shipping rate');
+    } finally {
+      setShippingLoading(false);
+    }
+  }, [product?.id]);
+
+  // Watch pincode changes
+  useEffect(() => {
+    if (address.pincode.length === 6) {
+      fetchShippingRate(address.pincode);
+    } else {
+      setShippingRate(null);
+      setShippingError(null);
+    }
+  }, [address.pincode, fetchShippingRate]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -91,18 +161,25 @@ export default function ProductDetailInline({ productId, onBack }: ProductDetail
       return;
     }
 
+    if (isPhysical && !shippingRate) {
+      toast.error("Please wait for shipping rate to be calculated");
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Please sign in to continue");
       return;
     }
 
+    const totalAmount = product.price + shippingRate.shipping_charge;
+
     try {
       setProcessingPayment(true);
       const orderPayload = {
-        amount: product.price,
+        amount: totalAmount,
         currency: 'INR',
-        description: `Purchase of ${product.name}`,
+        description: `Purchase of ${product.name} (incl. shipping)`,
         receipt: `rcpt_${Date.now()}_inline`,
         product_id: product.id,
       };
@@ -135,7 +212,7 @@ export default function ProductDetailInline({ productId, onBack }: ProductDetail
               item_id: product.id,
               product_id: product.id,
               item_type: 'product',
-              amount: product.price,
+              amount: totalAmount,
               status: 'completed',
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -147,6 +224,8 @@ export default function ProductDetailInline({ productId, onBack }: ProductDetail
                 city: address.city,
                 state: address.state,
                 pincode: address.pincode,
+                shipping_charge: shippingRate.shipping_charge,
+                courier_name: shippingRate.courier_name,
               },
               shipment_status: 'pending',
             });
@@ -507,15 +586,64 @@ export default function ProductDetailInline({ productId, onBack }: ProductDetail
             </div>
 
             {/* Price Summary */}
-            <div className="pt-6 border-t border-gray-100 dark:border-zinc-800">
+            <div className="pt-6 border-t border-gray-100 dark:border-zinc-800 space-y-4">
+              {/* Shipping Rate Display */}
+              {isPhysical && (
+                <div className="bg-gray-50 dark:bg-zinc-900/50 p-5 rounded-2xl space-y-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Truck className="h-4 w-4 text-primary" />
+                    <p className="text-xs font-black uppercase tracking-widest opacity-60">Shipping</p>
+                  </div>
+                  
+                  {shippingLoading ? (
+                    <div className="flex items-center gap-3 py-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      <p className="text-sm font-medium text-muted-foreground">Calculating shipping rate...</p>
+                    </div>
+                  ) : shippingError ? (
+                    <div className="py-2">
+                      <p className="text-sm font-medium text-rose-500">{shippingError}</p>
+                    </div>
+                  ) : shippingRate ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm font-bold dark:text-white">{shippingRate.courier_name}</p>
+                          {shippingRate.estimated_delivery_days && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Estimated delivery: {shippingRate.estimated_delivery_days}{/^\d+$/.test(String(shippingRate.estimated_delivery_days)) ? ' Days' : ''}
+                              {shippingRate.estimated_delivery_date && ` (${shippingRate.estimated_delivery_date})`}
+                            </p>
+                          )}
+                        </div>
+                        <p className="text-lg font-black text-primary">₹{shippingRate.shipping_charge}</p>
+                      </div>
+                      {shippingRate.is_recommended && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800">
+                          ✓ Recommended
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-2">Enter pincode to calculate shipping</p>
+                  )}
+                </div>
+              )}
+
+
+              {/* Total */}
               <div className="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-6 rounded-2xl">
                 <div>
                   <p className="text-xs font-black uppercase tracking-widest opacity-60">Total Amount</p>
-                  <p className="text-2xl font-black text-primary">₹{product?.price}</p>
+                  <p className="text-2xl font-black text-primary">
+                    ₹{shippingRate ? (product?.price + shippingRate.shipping_charge) : product?.price}
+                  </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs font-black uppercase tracking-widest text-emerald-500">Free Shipping</p>
-                  <p className="text-xs font-medium text-muted-foreground mt-1">Single product purchase</p>
+                <div className="text-right space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Product: ₹{product?.price}</p>
+                  {shippingRate && (
+                    <p className="text-xs font-medium text-muted-foreground">Shipping: ₹{shippingRate.shipping_charge}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -531,7 +659,7 @@ export default function ProductDetailInline({ productId, onBack }: ProductDetail
             </Button>
             <Button
               onClick={handleProceedToPayment}
-              disabled={processingPayment}
+              disabled={processingPayment || shippingLoading || (isPhysical && !shippingRate)}
               className="rounded-2xl h-12 px-8 font-black bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 gap-3"
             >
               <CreditCard className="h-5 w-5" />

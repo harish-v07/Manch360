@@ -172,7 +172,7 @@ export default function ProductDetailInline({ productId, onBack }: ProductDetail
       return;
     }
 
-    const totalAmount = product.price + shippingRate.shipping_charge;
+    const totalAmount = product.price + (shippingRate?.shipping_charge || 0);
 
     try {
       setProcessingPayment(true);
@@ -224,8 +224,10 @@ export default function ProductDetailInline({ productId, onBack }: ProductDetail
                 city: address.city,
                 state: address.state,
                 pincode: address.pincode,
-                shipping_charge: shippingRate.shipping_charge,
-                courier_name: shippingRate.courier_name,
+                ...(shippingRate ? {
+                  shipping_charge: shippingRate.shipping_charge,
+                  courier_name: shippingRate.courier_name,
+                } : {})
               },
               shipment_status: 'pending',
             });

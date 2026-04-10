@@ -336,7 +336,7 @@ export default function LearnerCartInline() {
                   <div className="flex justify-between text-sm font-medium">
                     <span className="opacity-60">Shipping</span>
                     <span className="dark:text-white font-bold text-xs">
-                      {shippingRate ? `₹${shippingRate.shipping_charge}` : 'Calculated at checkout'}
+                      {shippingRate ? `₹${shippingRate.shipping_charge}` : (hasPhysicalItems ? 'Calculated at checkout' : 'Not Applicable')}
                     </span>
                   </div>
                   <div className="pt-3 border-t border-gray-100 dark:border-zinc-800 flex justify-between">

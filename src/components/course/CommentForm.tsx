@@ -8,6 +8,8 @@ interface CommentFormProps {
     courseId: string;
     lessonId: string;
     parentCommentId?: string;
+    commentId?: string;
+    initialContent?: string;
     onSuccess: () => void;
     onCancel?: () => void;
     placeholder?: string;
@@ -17,11 +19,13 @@ export function CommentForm({
     courseId,
     lessonId,
     parentCommentId,
+    commentId,
+    initialContent = "",
     onSuccess,
     onCancel,
     placeholder = "Ask a question or share your thoughts...",
 }: CommentFormProps) {
-    const [content, setContent] = useState("");
+    const [content, setContent] = useState(initialContent);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -43,21 +47,38 @@ export function CommentForm({
             return;
         }
 
-        const { error } = await supabase.from("course_comments").insert({
-            course_id: courseId,
-            lesson_id: lessonId,
-            user_id: user.id,
-            parent_comment_id: parentCommentId || null,
-            content: content.trim(),
-        });
+        if (commentId) {
+            const { error } = await supabase
+                .from("course_comments")
+                .update({ content: content.trim() })
+                .eq("id", commentId)
+                .eq("user_id", user.id);
 
-        if (error) {
-            toast.error("Failed to post comment");
-            console.error(error);
+            if (error) {
+                toast.error("Failed to update comment");
+                console.error(error);
+            } else {
+                toast.success("Comment updated!");
+                setContent("");
+                onSuccess();
+            }
         } else {
-            toast.success(parentCommentId ? "Reply posted!" : "Comment posted!");
-            setContent("");
-            onSuccess();
+            const { error } = await supabase.from("course_comments").insert({
+                course_id: courseId,
+                lesson_id: lessonId,
+                user_id: user.id,
+                parent_comment_id: parentCommentId || null,
+                content: content.trim(),
+            });
+
+            if (error) {
+                toast.error("Failed to post comment");
+                console.error(error);
+            } else {
+                toast.success(parentCommentId ? "Reply posted!" : "Comment posted!");
+                setContent("");
+                onSuccess();
+            }
         }
 
         setIsSubmitting(false);
@@ -92,7 +113,7 @@ export function CommentForm({
                         </Button>
                     )}
                     <Button type="submit" size="sm" disabled={isSubmitting || !content.trim()}>
-                        {isSubmitting ? "Posting..." : parentCommentId ? "Reply" : "Post Comment"}
+                        {isSubmitting ? (commentId ? "Saving..." : "Posting...") : commentId ? "Save Edit" : parentCommentId ? "Reply" : "Post Comment"}
                     </Button>
                 </div>
             </div>

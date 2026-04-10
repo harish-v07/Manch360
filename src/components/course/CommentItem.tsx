@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Trash2, Reply } from "lucide-react";
+import { Trash2, Reply, Pencil } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { CommentForm } from "./CommentForm";
 
@@ -26,6 +26,7 @@ export function CommentItem({
     depth = 0,
 }: CommentItemProps) {
     const [showReplyForm, setShowReplyForm] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const isOwnComment = comment.user_id === currentUserId;
@@ -56,6 +57,11 @@ export function CommentItem({
         onCommentAdded();
     };
 
+    const handleEditSuccess = () => {
+        setIsEditing(false);
+        onCommentAdded();
+    };
+
     return (
         <div className={`${depth > 0 ? "ml-8 mt-4" : "mt-4"}`}>
             <div className="flex gap-3">
@@ -83,12 +89,25 @@ export function CommentItem({
                         </span>
                     </div>
 
-                    <p className="text-sm mt-1 whitespace-pre-wrap break-words">
-                        {comment.content}
-                    </p>
+                    {isEditing ? (
+                        <div className="mt-3 mb-2">
+                            <CommentForm
+                                courseId={comment.course_id}
+                                lessonId={comment.lesson_id}
+                                commentId={comment.id}
+                                initialContent={comment.content}
+                                onSuccess={handleEditSuccess}
+                                onCancel={() => setIsEditing(false)}
+                            />
+                        </div>
+                    ) : (
+                        <p className="text-sm mt-1 whitespace-pre-wrap break-words">
+                            {comment.content}
+                        </p>
+                    )}
 
                     <div className="flex gap-2 mt-2">
-                        {depth < 3 && (
+                        {depth < 3 && !isEditing && (
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -100,7 +119,19 @@ export function CommentItem({
                             </Button>
                         )}
 
-                        {canDelete && (
+                        {isOwnComment && !isEditing && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsEditing(true)}
+                                className="h-7 text-xs"
+                            >
+                                <Pencil className="h-3 w-3 mr-1" />
+                                Edit
+                            </Button>
+                        )}
+
+                        {canDelete && !isEditing && (
                             <Button
                                 variant="ghost"
                                 size="sm"
